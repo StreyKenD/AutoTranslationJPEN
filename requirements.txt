@@ -1,0 +1,14 @@
+certifi==2025.6.15
+charset-normalizer==3.4.2
+idna==3.10
+keyboard==0.13.5
+mss==10.0.0
+numpy==2.2.6
+packaging==25.0
+pillow==11.3.0
+requests==2.32.4
+urllib3==2.5.0
+deep_translator
+opencv-python
+paddleocr
+paddlepaddle

@@ -1,56 +1,53 @@
 import tkinter as tk
-import cv2
 import keyboard
 from core.capture import grab_region
-from core.ocr import extract_text
+from core.yolo_bubble import detect_bubbles
+from core.ocr import extract_text_from_bubbles
 from core.translate import translate_batch
 from core.ui_overlay import show_overlay, show_status_overlay
 from core.logger import setup_logger
 import logging
+import cv2
 
 setup_logger()
 
 def main():
-    region = {"top": 118, "left": 575, "width": 768, "height": 915}
+    region = {"top": 128, "left": 575, "width": 768, "height": 864}
     block_rects = []
-    running = False  # To prevent concurrent runs
 
     def run_ocr_cycle():
-        nonlocal block_rects, running
-        if running:
-            logging.info("OCR cycle already running. Ignoring new request.")
-            return
-        running = True
-
+        nonlocal block_rects
         logging.info("Starting OCR cycle")
 
-        # Clear previous overlays
         for r in block_rects:
             r.destroy()
         block_rects.clear()
 
-        show_status_overlay(root, region, "Running OCR...", duration=1000)
+        show_status_overlay(root, region, "Running OCR...", duration=5000)
 
         img = grab_region(region)
-        logging.debug("Region captured")
 
-        blocks = extract_text(img)
-        # Check blocks content for debugging
-        for b in blocks:
-            logging.debug(f"Block item type and value: {type(b)} - {b}")
+        bubble_crops = detect_bubbles(img)
+        logging.info(f"Detected {len(bubble_crops)} bubbles")
+        logging.debug(f"Bubble crops: {bubble_crops}")
+        if not bubble_crops:
+            logging.info("No bubbles detected. Skipping OCR.")
+            show_status_overlay(root, region, "No bubbles found.", duration=1000)
+            return
+
+        blocks = extract_text_from_bubbles(bubble_crops)
 
         if not blocks:
             logging.info("No OCR blocks detected. Skipping translation.")
             show_status_overlay(root, region, "No text found.", duration=1000)
-            running = False
             return
 
-        # Add angle=None since you expect 4-item tuples in show_overlay
-        blocks_with_angle = [(*b, None) for b in blocks]
+        logging.info(f"OCR extracted {len(blocks)} blocks")
 
-        block_rects = show_overlay(root, region, blocks_with_angle, show_translation=False)
+        # Show OCR text first (no translation yet)
+        block_rects = show_overlay(root, region, blocks, show_translation=False)
 
-        show_status_overlay(root, region, "Translating...", duration=1000)
+        show_status_overlay(root, region, "Translating...", duration=800)
 
         texts = [b[0] for b in blocks]
         translations = translate_batch(texts)
@@ -58,12 +55,10 @@ def main():
 
         for r in block_rects:
             r.destroy()
-
-        block_rects = show_overlay(root, region, blocks_with_angle, translations, show_translation=True)
+        block_rects = show_overlay(root, region, blocks, translations, show_translation=True)
         logging.info("Overlay updated")
 
-        running = False
-
+    # Tkinter root window
     root = tk.Tk()
     root.overrideredirect(True)
     root.attributes("-topmost", True)
@@ -87,7 +82,6 @@ def main():
     keyboard.add_hotkey('esc', root.destroy)
     logging.info("Application started. Press F8 to run OCR, ESC to exit.")
     root.mainloop()
-
 
 if __name__ == "__main__":
     main()

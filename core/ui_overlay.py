@@ -46,18 +46,19 @@ def show_status_overlay(root, region, message, duration=1000):
     except Exception:
         canvas = tk.Canvas(status_win, width=w, height=30, bg='black', highlightthickness=0)
     canvas.pack(fill="both", expand=True)
-    canvas.create_text(w//2, 15, text=message, fill="black", font=("Arial", 14, "bold"))
+    canvas.create_text(w // 2, 15, text=message, fill="black", font=("Arial", 14, "bold"))
 
-    # Auto-destroy after duration (ms)
     status_win.after(duration, status_win.destroy)
 
 def show_overlay(root, region, blocks, translations=None, show_translation=True):
     block_rects = []
 
     for i, block in enumerate(blocks):
-        # New format: (text, (x1,y1,x2,y2), conf, angle)
-        # Fallback for old format
-        text, (x1, y1, x2, y2), conf, angle = block
+        try:
+            text, (x1, y1, x2, y2), conf, angle = block
+        except ValueError as e:
+            logging.error(f"Failed to unpack block: {e} - {block}")
+            continue
 
         w, h = x2 - x1, y2 - y1
         color = 'blue'
@@ -65,26 +66,38 @@ def show_overlay(root, region, blocks, translations=None, show_translation=True)
         rect = tk.Toplevel(root)
         rect.overrideredirect(True)
         rect.attributes("-topmost", True)
-        rect.geometry(f"{w}x{h+50}+{region['left']+x1}+{region['top']+y1-25}")
+        rect.geometry(f"{w}x{h+40}+{region['left']+x1}+{region['top']+y1-20}")
 
         try:
             rect.attributes("-transparentcolor", "cyan")
-            canvas = tk.Canvas(rect, width=w, height=h+50, bg='cyan', highlightthickness=0)
+            canvas = tk.Canvas(rect, width=w, height=h+40, bg='cyan', highlightthickness=0)
         except Exception:
-            canvas = tk.Canvas(rect, width=w, height=h+50, bg='white', highlightthickness=0)
+            canvas = tk.Canvas(rect, width=w, height=h+40, bg='white', highlightthickness=0)
 
         canvas.pack(fill="both", expand=True)
-        canvas.create_rectangle(2, 2, w-2, h-2, outline=color, width=3)
-        canvas.create_text(w // 2, h // 2, text=f"{text[:20]}\n(conf: {conf:.2f})", fill=color, font=("Arial", 10))
+        canvas.create_rectangle(2, 2, w-2, h-2, outline=color, width=2)
+        ocr_text = f"{text[:20]}\n(conf: {conf:.2f})"
+        canvas.create_text(
+            w // 2, 4,
+            text=ocr_text,
+            fill=color,
+            font=("Courier New", 9),
+            anchor="n"
+        )
 
-        if angle is not None:
-            arrow = '↕' if angle == 1 else '→'
-            canvas.create_text(w - 10, 10, text=arrow, fill="red", anchor="ne", font=("Arial", 8, "bold"))
-
+        # Draw translation under the box with background
         if show_translation and translations:
-            canvas.create_text(w // 2, h + 20, text=translations[i], fill="black", font=("Arial", 12, "bold"))
-
+            canvas.create_rectangle(0, h, w, h + 22, fill="white", outline="")
+            canvas.create_text(
+                w // 2, h + 2,
+                text=translations[i],
+                fill="black",
+                font=("Helvetica", 10, "bold"),
+                anchor="n"
+            )
+        
         block_rects.append(rect)
-        logging.debug(f'Showed overlay: text={text}, conf={conf:.2f}, angle={angle}, box={(x1, y1, x2, y2)}')
+        logging.debug(f'Showed overlay: text="{text}", trans="{translations[i] if translations else "N/A"}", box=({x1},{y1},{x2},{y2}), conf={conf}')
 
     return block_rects
+

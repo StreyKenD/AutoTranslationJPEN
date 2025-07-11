@@ -51,53 +51,42 @@ def show_status_overlay(root, region, message, duration=1000):
     status_win.after(duration, status_win.destroy)
 
 def show_overlay(root, region, blocks, translations=None, show_translation=True):
+    import textwrap
     block_rects = []
 
     for i, block in enumerate(blocks):
-        try:
-            text, (x1, y1, x2, y2), conf, angle = block
-        except ValueError as e:
-            logging.error(f"Failed to unpack block: {e} - {block}")
-            continue
-
+        text, (x1,y1,x2,y2), conf, angle = block
         w, h = x2 - x1, y2 - y1
-        color = 'blue'
+
+        # compute screen coords
+        x_screen = region['left'] + x1
+        y_screen = region['top']  + y1
 
         rect = tk.Toplevel(root)
         rect.overrideredirect(True)
         rect.attributes("-topmost", True)
-        rect.geometry(f"{w}x{h+40}+{region['left']+x1}+{region['top']+y1-20}")
+        rect.geometry(f"{w}x{h}+{x_screen}+{y_screen}")
 
-        try:
-            rect.attributes("-transparentcolor", "cyan")
-            canvas = tk.Canvas(rect, width=w, height=h+40, bg='cyan', highlightthickness=0)
-        except Exception:
-            canvas = tk.Canvas(rect, width=w, height=h+40, bg='white', highlightthickness=0)
-
+        canvas = create_overlay_canvas(rect, w, h)
         canvas.pack(fill="both", expand=True)
-        canvas.create_rectangle(2, 2, w-2, h-2, outline=color, width=2)
-        ocr_text = f"{text[:20]}\n(conf: {conf:.2f})"
-        canvas.create_text(
-            w // 2, 4,
-            text=ocr_text,
-            fill=color,
-            font=("Courier New", 9),
-            anchor="n"
-        )
 
-        # Draw translation under the box with background
-        if show_translation and translations:
-            canvas.create_rectangle(0, h, w, h + 22, fill="white", outline="")
-            canvas.create_text(
-                w // 2, h + 2,
-                text=translations[i],
-                fill="black",
-                font=("Helvetica", 10, "bold"),
-                anchor="n"
-            )
-        
+        # draw rounded bubble background with border_color (as before)…
+
+        # ONLY draw translation if requested AND data present
+        # if show_translation and translations:
+        #     wrapped = textwrap.fill(translations[i], width=max(10, w//12))
+        #     canvas.create_text(
+        #         w//2, h//2,
+        #         text=wrapped,
+        #         fill="#222",
+        #         font=("Yu Gothic", 12, "bold"),
+        #         anchor="center",
+        #         justify="center",
+        #         width=w-20
+        #     )
+        # elif not show_translation:
+        #     # preview mode: you could draw OCR text here if wanted
+        #     pass
+
         block_rects.append(rect)
-        logging.debug(f'Showed overlay: text="{text}", trans="{translations[i] if translations else "N/A"}", box=({x1},{y1},{x2},{y2}), conf={conf}')
-
     return block_rects
-

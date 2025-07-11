@@ -8,6 +8,7 @@ from core.ui_overlay import show_overlay, show_status_overlay
 from core.logger import setup_logger
 import logging
 import cv2
+from core.ui_pillow_bubble import draw_bubbles_on_canvas
 
 setup_logger()
 
@@ -35,12 +36,21 @@ def main():
             show_status_overlay(root, region, "No bubbles found.", duration=1000)
             return
 
-        blocks = extract_text_from_bubbles(bubble_crops)
+        raw_blocks = extract_text_from_bubbles(bubble_crops)
 
-        if not blocks:
+        if not raw_blocks:
             logging.info("No OCR blocks detected. Skipping translation.")
             show_status_overlay(root, region, "No text found.", duration=1000)
             return
+        
+        blocks = []
+        for text, (x1, y1, x2, y2), conf, angle in raw_blocks:
+            # x1 = int(x1 / scale)
+            # y1 = int(y1 / scale)
+            # x2 = int(x2 / scale)
+            # y2 = int(y2 / scale)
+            blocks.append((text, (x1, y1, x2, y2), conf, angle))
+
 
         logging.info(f"OCR extracted {len(blocks)} blocks")
 
@@ -52,6 +62,9 @@ def main():
         texts = [b[0] for b in blocks]
         translations = translate_batch(texts)
         logging.info("Translation complete")
+
+        if blocks and translations:
+            draw_bubbles_on_canvas(bubble_canvas, blocks, translations, region)
 
         for r in block_rects:
             r.destroy()
@@ -77,6 +90,43 @@ def main():
     canvas.pack(fill="both", expand=True)
     canvas.create_rectangle(2, 2, region['width']-2, region['height']-2, outline="red", width=4)
     region_rectangle.lift(root)
+
+    # after you draw the red capture rectangle in main():
+    overlay = tk.Toplevel(root)
+    overlay.overrideredirect(True)
+    overlay.attributes("-topmost", True)
+    overlay.geometry(f"{region['width']}x{region['height']}+{region['left']}+{region['top']}")
+
+    MAGENTA = "#FF00FF"
+
+    # Tell Tkinter: treat MAGENTA pixels as fully transparent
+    overlay.attributes("-transparentcolor", MAGENTA)
+
+    # Create a canvas whose background is that same MAGENTA color
+    bubble_canvas = tk.Canvas(
+        overlay,
+        width=region['width'],
+        height=region['height'],
+        bg=MAGENTA,
+        highlightthickness=0
+    )
+    bubble_canvas.pack(fill="both", expand=True)
+    # try:
+    #     overlay.attributes("-transparentcolor", "white")
+    #     bubble_canvas = tk.Canvas(overlay,
+    #                             width=region['width'],
+    #                             height=region['height'],
+    #                             bg='white',
+    #                             highlightthickness=0)
+    # except Exception:
+    #     bubble_canvas = tk.Canvas(overlay,
+    #                             width=region['width'],
+    #                             height=region['height'],
+    #                             bg='white',
+    #                             highlightthickness=0)
+    # bubble_canvas.pack(fill="both", expand=True)
+
+    bubble_canvas.create_oval(0, 0, 5, 5, fill='red')
 
     keyboard.add_hotkey('f8', run_ocr_cycle)
     keyboard.add_hotkey('esc', root.destroy)

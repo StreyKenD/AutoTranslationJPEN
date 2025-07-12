@@ -16,5 +16,5 @@ def detect_bubbles(image: np.ndarray) -> list:
             crop = image[y1:y2, x1:x2]
             crops.append((crop, (x1, y1, x2, y2)))
             cv2.imwrite("debug/10_final.png", crop)
-            logging.debug(f"Saved bubble crop: ")
+            # logging.debug(f"Saved bubble crop: ")
     return crops

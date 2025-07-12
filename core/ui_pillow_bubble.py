@@ -61,33 +61,72 @@ def make_bubble_image(text: str, w: int, h: int) -> Image.Image:
 
     return im
 
+
+from PIL import Image, ImageDraw, ImageFont, ImageTk
+import textwrap
+
 def draw_bubbles_on_canvas(canvas, blocks, translations, region):
-    """
-    Clears the canvas and draws each bubble+translation image at the correct spot.
-    blocks: List of (text, (x1,y1,x2,y2), conf, angle)
-    translations: List of strings
-    region: dict with 'left','top'
-    """
-    global _photo_cache
-    new_cache = {}
-    canvas.delete("all")
+    canvas_items = []
 
-    for i, ((_, (x1, y1, x2, y2), conf, angle), trans) in enumerate(zip(blocks, translations)):
-        w, h = x2 - x1, y2 - y1
-        key = (i, trans, w, h)
-        if key in _photo_cache:
-            photo = _photo_cache[key]
-        else:
-            pil_im = make_bubble_image(trans, w, h)
-            photo = ImageTk.PhotoImage(pil_im)
-            new_cache[key] = photo
+    if not hasattr(canvas, "images"):
+        canvas.images = []
 
-        # draw at (x1,y1) relative to region
-        canvas.create_image(
-            x1, y1,
-            image=photo,
-            anchor="nw"
-        )
+    canvas.images.clear()
 
-    # replace cache
-    _photo_cache = new_cache
+    for (text, (x1, y1, x2, y2), conf, angle), translated in zip(blocks, translations):
+        try:
+            # Bubble size settings
+            max_width = 220
+            max_height = 120
+            width = min(max_width, max(150, x2 - x1))
+            height = min(max_height, max(60, y2 - y1))
+            padding = 10
+
+            # Create transparent image
+            img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(img)
+
+            # Draw rounded white bubble with black border
+            draw.rounded_rectangle(
+                (0, 0, width, height),
+                radius=20,
+                fill=(255, 255, 255, 240),
+                outline=(0, 0, 0),
+                width=3
+            )
+
+            # Load font
+            try:
+                font = ImageFont.truetype("arial.ttf", 16)
+            except:
+                font = ImageFont.load_default()
+
+            # Wrap text manually
+            line_width = 25
+            wrapped_text = textwrap.fill(translated, width=line_width)
+            lines = wrapped_text.split('\n')
+
+            # Measure text block height for vertical centering
+            line_height = font.getbbox("A")[3] + 4  # height + line spacing
+            total_text_height = len(lines) * line_height
+
+            for i, line in enumerate(lines):
+                line_width_px = font.getbbox(line)[2]
+                x = (width - line_width_px) // 2
+                y = (height - total_text_height) // 2 + i * line_height
+                draw.text((x, y), line, fill="black", font=font)
+
+            # Convert to Tk image
+            photo = ImageTk.PhotoImage(img)
+            canvas.images.append(photo)
+
+            # Draw centered
+            cx = x1 + (x2 - x1) // 2
+            cy = y1 + (y2 - y1) // 2
+            item = canvas.create_image(cx, cy, image=photo, anchor="center")
+            canvas_items.append(item)
+
+        except Exception as e:
+            print(f"[draw_bubbles_on_canvas] Error drawing bubble: {e}")
+
+    return canvas_items

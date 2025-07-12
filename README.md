@@ -4,7 +4,52 @@
 
 python app.py
 
+These aren’t critical now but great upgrades later:
 
+🤖 Fine-tune a YOLO model just for manga speech bubbles
+
+🧠 Train PaddleOCR with manga fonts
+
+💬 Add subtitle-mode: show all translations in corner
+
+🔄 Auto-translate when page changes using hash/frame diff
+
+✅ D. UI / OVERLAY IMPROVEMENTS
+You're very close to Google Lens-level polish. Try these:
+
+1. Add dynamic font resizing
+Make the font size adapt to bubble height.
+
+Auto-wrap if translated_text.length * font_size > width.
+
+2. Word-level translation preview (optional)
+Show OCR text briefly before translating.
+
+Might help if you want users to optionally skip mistranslations.
+
+3. Outline / drop shadow text for readability
+In Pillow:
+
+python
+Copiar
+Editar
+draw.text((x+1, y+1), text, font=font, fill="black")  # shadow
+draw.text((x, y), text, font=font, fill="white")      # main
+
+✅ E. PERFORMANCE BOOST
+1. Avoid resizing twice
+Right now you're resizing before YOLO + OCR.
+
+✅ Use original for YOLO
+
+✅ Resize only for OCR after cropping bubbles
+
+2. Multithread OCR and Translation
+OCR and translation can run in parallel per bubble:
+
+Use concurrent.futures.ThreadPoolExecutor
+
+Run extract_text_from_bubbles() and translate_batch() in parallel
 
 ## 🎯 Goals
 1. Replace all Tesseract calls with PaddleOCR (GPU-compatible, angle/vertical text support).  

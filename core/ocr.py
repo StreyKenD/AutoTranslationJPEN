@@ -31,8 +31,8 @@ def extract_text_from_bubbles(
             if not result or not isinstance(result[0], dict):
                 logging.warning(f"OCR result for bubble {idx} is empty or invalid.")
                 continue
-
-            logging.debug(f"OCR result for bubble {idx}: {result[0]}")
+# 
+            # logging.debug(f"OCR result for bubble {idx}: {result[0]}")
             logging.debug(f"texts: {result[0].get('rec_texts', [])}")
 
             r = result[0]
@@ -64,7 +64,7 @@ def extract_text_from_bubbles(
                 max_x = max(l[1][2] for l in lines)
                 max_y = max(l[1][3] for l in lines)
 
-                merged_text = "".join(bubble_text)
+                merged_text = "".join(reversed(bubble_text))
                 conf = total_conf / count
                 x1 = x_offset + min_x
                 y1 = y_offset + min_y
@@ -78,45 +78,7 @@ def extract_text_from_bubbles(
             continue
 
     logging.info(f"Grouped OCR blocks: {len(all_blocks)}")
+    logging.info(f"All OCR blocks: {all_blocks}")
 
-    grouped = group_vertical_blocks(all_blocks)
-    merged_blocks = merge_block_groups(grouped)
+    return all_blocks
 
-    logging.info(f"Merged vertical blocks: {merged_blocks}")
-
-    return merged_blocks
-
-def group_vertical_blocks(blocks, max_dx=30, max_dy=20):
-    # Sort top-to-bottom, left-to-right
-    blocks = sorted(blocks, key=lambda b: (b[1][0], b[1][1]))
-    groups = []
-
-    for block in blocks:
-        added = False
-        for group in groups:
-            last = group[-1]
-            lx1, ly1, lx2, ly2 = last[1]
-            bx1, by1, bx2, by2 = block[1]
-            if abs(bx1 - lx1) <= max_dx and abs(by1 - ly2) <= max_dy:
-                group.append(block)
-                added = True
-                break
-        if not added:
-            groups.append([block])
-    return groups
-
-def merge_block_groups(groups):
-    merged = []
-    for group in groups:
-        # Sort vertically (top to bottom) for vertical Japanese
-        group = sorted(group, key=lambda b: b[1][1])  # sort by y1
-
-        text = ''.join([b[0] for b in group])  # use line break to preserve vertical layout
-        x1 = min(b[1][0] for b in group)
-        y1 = min(b[1][1] for b in group)
-        x2 = max(b[1][2] for b in group)
-        y2 = max(b[1][3] for b in group)
-        score = sum(b[2] for b in group) / len(group)
-        angle = group[0][3]
-        merged.append((text, (x1, y1, x2, y2), score, angle))
-    return merged

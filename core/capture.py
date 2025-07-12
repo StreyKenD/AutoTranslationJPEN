@@ -58,11 +58,13 @@ def enhance_for_ocr_debug(
         # 00) Original capture
         save("original", img)
 
+        TARGET_MIN = 200
+
         # 01) Upscale if too small
         h, w = img.shape[:2]
         min_dim = min(h, w)
-        if min_dim < 100:
-            scale = 200 / min_dim
+        if min_dim < TARGET_MIN:
+            scale = TARGET_MIN / min_dim
             img = cv2.resize(
                 img, None,
                 fx=scale, fy=scale,

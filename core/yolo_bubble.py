@@ -18,3 +18,10 @@ def detect_bubbles(image: np.ndarray) -> list:
             cv2.imwrite("debug/10_final.png", crop)
             # logging.debug(f"Saved bubble crop: ")
     return crops
+
+def sort_bubbles_for_japanese(bubbles: list) -> list:
+    """
+    Given a list of (crop, (x1,y1,x2,y2)), return them sorted
+    so the rightmost bubble is first (Japanese vertical reading).
+    """
+    return sorted(bubbles, key=lambda b: b[1][0], reverse=True)

@@ -1,0 +1,102 @@
+1. Bubble Detection (YOLO)
+[ ] Evaluate current YOLO model performance on varied manga panels.
+
+[ ] Gather and annotate bubble-heavy pages for testing edge cases.
+
+[ ] Fine‑tune the YOLO model for greater accuracy on overlapping or irregular bubbles.
+
+2. OCR Engine
+[ ] Integrate Manga-OCR for better handling of vertical text and furigana 
+GitHub
++2
+Calaverd (O.G.Barajas) Personal Dev Blog
++2
+GitHub
++2
+eliteai.tools
+.
+
+[ ] Run side-by-side comparisons: PaddleOCR vs Manga-OCR on multi-bubble layouts.
+
+[ ] Capture OCR confidence metrics to flag low-quality recognition instances.
+
+3. Translation Engine
+[ ] Benchmark alternatives like DeepL vs Google Translate for speed and quality.
+
+[ ] Build fallback paths (e.g. if DeepL fails, use Google API).
+
+[ ] Optionally test context-aware multilingual LLM integration 
+arXiv
+.
+
+4. Live Capture & Overlay
+[ ] Set up live frame capture using OpenCV / FFmpeg from selected screen region.
+
+[ ] Create overlay renderer that:
+
+Resizes bubbles dynamically to fit translated text.
+
+Matches font, style, color, and outlines.
+
+[ ] Implement toggle to switch between “replace in-place” and “show nearby” translation styles.
+
+5. Logging & History
+[ ] Save each translation with:
+
+Original text
+
+Translated text
+
+Timestamp
+
+Screenshot snippet of the bubble
+
+[ ] Build a UI sidebar or popup to:
+
+Browse past translations
+
+Jump to frame location
+
+Export history (e.g. JSON or CSV)
+
+6. UX Tuning & Edge Cases
+[ ] Detect text overflow; auto-resize or switch to nearby overlay.
+
+[ ] Add hover/click fallback to display original + translated text overlay.
+
+[ ] Ensure alignments are consistent when bubbles move or scales change.
+
+7. Testing & Validation
+[ ] Assemble test suite with diverse manga pages, fonts, styles.
+
+ Measure:
+
+Detection accuracy
+
+OCR accuracy and speed
+
+Translation quality
+
+Overlay alignment
+
+[ ] Iterate based on failures or low-quality cases.
+
+8. Performance Optimization
+[ ] Profile latency end-to-end (capture → detect → OCR → translate → overlay).
+
+[ ] Implement batching or frame-skip strategies if needed.
+
+9. Documentation & Future Steps
+[ ] Write quickstart and usage guides for users.
+
+[ ] Plan integration of multimodal LLM translation once stable 
+TechRadar
++4
+Top AI tools
++4
+eliteai.tools
++4
+arXiv
+.
+
+[ ] Share or open-source pipeline; gather community feedback for improvements.

@@ -51,6 +51,33 @@ Use concurrent.futures.ThreadPoolExecutor
 
 Run extract_text_from_bubbles() and translate_batch() in parallel
 
+4. Performance & Responsiveness
+Parallelize OCR & Translation with concurrent.futures.ThreadPoolExecutor so multiple bubbles are processed truly in parallel (your GPU can batch OCR, and translation calls can fire off concurrently).
+
+Cache translations (in a dict keyed by original Japanese text) so repeated bubbles (or repeated presses) don’t re‑translate the same string.
+
+5. UI Polish
+Dynamic font sizing: Measure each bubble’s width/height and pick a font size that maximizes legibility without overflow.
+
+Drop‑shadows or outlines behind text to improve contrast on noisy backgrounds.
+
+Smooth fade‑in animations for the overlay so it doesn’t “pop” abruptly.
+
+6. Translation Engine Options
+Swap out Google Translate for an offline engine (e.g. argos-translate or a local LibreTranslate server).
+
+Or try the DeepL unofficial API for higher fidelity, then fall back to Google/LibreTranslate if it’s down.
+
+7. Live‑Video Mode
+Instead of “one shot per F8 press,” hook into a continuous capture loop (e.g. tkinter.after or a background thread) to process frames at, say, 2–3 FPS.
+
+Keep your YOLO model loaded once, and reuse it on each frame for near real‑time “manga‑lens” translation.
+
+8. Bubble‑Detector Improvements
+Fine‑tune your YOLO model on your own manga pages for better recall/precision.
+
+Or experiment with Transformer‑based detectors (e.g. DETR) if you need higher accuracy on weird layouts.
+
 ## 🎯 Goals
 1. Replace all Tesseract calls with PaddleOCR (GPU-compatible, angle/vertical text support).  
 2. Maintain existing input/output interfaces (e.g. image paths, screenshots).  

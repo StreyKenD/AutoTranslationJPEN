@@ -1,8 +1,8 @@
 import tkinter as tk
 import keyboard
 from core.capture import grab_region
-from core.yolo_bubble import detect_bubbles
-from core.ocr import extract_text_from_bubbles
+from core.yolo_bubble import detect_bubbles, sort_bubbles_for_japanese
+from core.ocr import extract_text_from_bubbles, ocr_single_bubble
 from core.translate import translate_batch
 from core.ui_overlay import destroy_status_overlay, show_overlay, show_status_overlay
 from core.logger import setup_logger
@@ -35,49 +35,6 @@ def main():
         else:
             logging.info("Bubbles toggle ON — will reappear after next OCR cycle")
 
-    def ocr_vertical_with_rotate(crop: np.ndarray, offset: Tuple[int,int,int,int]):
-        """
-        If crop is tall (vertical Japanese), rotate CCW, OCR it,
-        reverse the text, and remap its bounding‐boxes back.
-        Otherwise, just OCR normally.
-        """
-        x_off, y_off, _, _ = offset
-        h, w = crop.shape[:2]
-
-        # 1. Detect vertical orientation
-        if h > w * 1.2:
-            # 2. Rotate 90° CCW
-            rot = cv2.rotate(crop, cv2.ROTATE_90_COUNTERCLOCKWISE)
-            # We need a dummy offset for the rotated image;
-            # here (0,0) plus its full size so extract_text sees a valid box
-            dummy_offset = (0, 0, rot.shape[1], rot.shape[0])
-            # 3. OCR the rotated crop
-            rotated_blocks = extract_text_from_bubbles([(rot, dummy_offset)])
-
-            fixed = []
-            for text, (rx1, ry1, rx2, ry2), conf, angle in rotated_blocks:
-                # 4. Reverse the recognized string
-                rev = text#[::-1]
-
-                # 5. Remap rotated bbox (on rot of size w×h) back to original crop coords
-                #    rot.shape == (w, h) after rotation
-                new_x1 = ry1
-                new_y1 = h - rx2
-                new_x2 = ry2
-                new_y2 = h - rx1
-
-                # 6. Shift by original offset in the full screengrab
-                fixed.append((
-                    rev,
-                    (x_off + new_x1, y_off + new_y1, x_off + new_x2, y_off + new_y2),
-                    conf,
-                    angle
-                ))
-            return fixed
-
-        # not vertical → normal OCR
-        return extract_text_from_bubbles([(crop, offset)])
-
     def run_ocr_cycle():
         nonlocal block_rects
         nonlocal bubble_canvas_items
@@ -100,6 +57,7 @@ def main():
         show_status_overlay(root, region, "Getting bubbles...")
 
         bubble_crops = detect_bubbles(img)
+        bubble_crops = sort_bubbles_for_japanese(bubble_crops)
         logging.info(f"Detected {len(bubble_crops)} bubbles")
         # logging.debug(f"Bubble crops: {bubble_crops}")
         if not bubble_crops:
@@ -114,35 +72,34 @@ def main():
         show_status_overlay(root, region, "Getting texts...")
         raw_blocks = []
         for crop, offset in bubble_crops:
-            raw_blocks.extend(ocr_vertical_with_rotate(crop, offset))
+            raw_blocks.extend(extract_text_from_bubbles([(crop, offset)]))
 
         if not raw_blocks:
-            logging.info("No OCR blocks detected. Skipping translation.")
+            logging.info("No OCR text detected in any bubble. Skipping translation.")
             show_status_overlay(root, region, "No text found.")
             return
-        
+        logging.info(f"OCR extracted {len(raw_blocks)} bubbles")
+
         logging.debug(f"Raw OCR blocks: {raw_blocks}")
         blocks = []
         for text, (x1, y1, x2, y2), conf, angle in raw_blocks:
             blocks.append((text, (x1, y1, x2, y2), conf, angle))
         logging.debug(f"OCR blocks: {blocks}")
 
-
-        logging.info(f"OCR extracted {len(blocks)} blocks")
-
         # Show OCR text first (no translation yet)
         block_rects = show_overlay(root, region, blocks, show_translation=False)
-        logging.debug(f"Overlay rectangles: {block_rects}")
 
         t3 = time.perf_counter()
         timings['OCR - time to get text from image'] = t3 - t2
 
         destroy_status_overlay()
         show_status_overlay(root, region, "Getting translations...")
+        # Collect just the OCR texts
         texts = [b[0] for b in blocks]
         translations = translate_batch(texts)
         logging.info("Translation complete")
 
+        # Clear any prior overlays
         if blocks and translations:
             bubble_canvas_items = draw_bubbles_on_canvas(bubble_canvas, blocks, translations, region)
 

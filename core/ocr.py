@@ -8,13 +8,60 @@ from core.capture import enhance_for_ocr_debug
 
 # Initialize OCR
 default_ocr = PaddleOCR(
-    lang='japan',
-    use_angle_cls=True,
     text_recognition_model_name="PP-OCRv5_server_rec",
-    device='gpu:0',
-    det_db_box_thresh=0.1,
-    det_db_unclip_ratio=2.0
+    text_detection_model_name="PP-OCRv5_server_det",
+    use_textline_orientation=True,
+    device="gpu:0"
 )
+
+def ocr_single_bubble(
+    crop: np.ndarray,
+    x_off: int,
+    y_off: int,
+    min_score: float = 0.5
+) -> tuple[str, tuple[int,int,int,int], float]:
+    """
+    OCR one bubble crop, merge its vertical lines (top→bottom),
+    and return (merged_text, full_image_box, avg_conf).
+    """
+    # 1) Run OCR on crop
+    res = default_ocr.predict(crop)
+    if not res or not isinstance(res[0], dict):
+        return "", (x_off, y_off, x_off, y_off), 0.0
+    r = res[0]
+    texts  = r.get("rec_texts", [])
+    scores = r.get("rec_scores", [])
+    polys  = r.get("rec_polys", [])
+
+    # 2) Collect lines as (y1, text, box, score)
+    lines = []
+    for text, score, poly in zip(texts, scores, polys):
+        if not text or score < min_score:
+            continue
+        xs = [pt[0] for pt in poly]
+        ys = [pt[1] for pt in poly]
+        x1, y1 = int(min(xs)), int(min(ys))
+        x2, y2 = int(max(xs)), int(max(ys))
+        lines.append((y1, text, (x1, y1, x2, y2), score))
+
+    if not lines:
+        return "", (x_off, y_off, x_off, y_off), 0.0
+
+    # 3) Sort top→bottom
+    lines.sort(key=lambda l: l[0])
+
+    # 4) Merge text inline and average confidence
+    merged_text = "".join(l[1] for l in lines)
+    avg_conf = sum(l[3] for l in lines) / len(lines)
+
+    # 5) Build full-image box
+    x1 = x_off + min(l[2][0] for l in lines)
+    y1 = y_off + min(l[2][1] for l in lines)
+    x2 = x_off + max(l[2][2] for l in lines)
+    y2 = y_off + max(l[2][3] for l in lines)
+
+    return merged_text, (x1, y1, x2, y2), avg_conf
+
 
 def extract_text_from_bubbles(
     bubble_images: List[Tuple[np.ndarray, Tuple[int, int, int, int]]]
@@ -64,7 +111,7 @@ def extract_text_from_bubbles(
                 max_x = max(l[1][2] for l in lines)
                 max_y = max(l[1][3] for l in lines)
 
-                merged_text = "".join(reversed(bubble_text))
+                merged_text = "".join(bubble_text)
                 conf = total_conf / count
                 x1 = x_offset + min_x
                 y1 = y_offset + min_y
@@ -78,7 +125,35 @@ def extract_text_from_bubbles(
             continue
 
     logging.info(f"Grouped OCR blocks: {len(all_blocks)}")
-    logging.info(f"All OCR blocks: {all_blocks}")
 
+    # --- ensure bubbles themselves come out in right-to-left reading order ---
+    # each block: (text, (x1,y1,x2,y2), conf, angle)
+    all_blocks.sort(key=lambda b: b[1][0], reverse=True)
+    logging.info(f"OCR blocks after right-to-left sort: {all_blocks}")
     return all_blocks
 
+def extract_text_full_image(
+    image: np.ndarray,
+    min_score: float = 0.5
+) -> list[tuple[str, tuple[int,int,int,int], float]]:
+    """
+    Runs OCR on the whole image. Returns list of
+      (text, (x1,y1,x2,y2), score)
+    """
+    res = default_ocr.predict(image)
+    if not res or not isinstance(res[0], dict):
+        return []
+    r = res[0]
+    texts  = r.get("rec_texts", [])
+    scores = r.get("rec_scores", [])
+    polys  = r.get("rec_polys", [])
+
+    blocks = []
+    for text, score, poly in zip(texts, scores, polys):
+        if not text or score < min_score:
+            continue
+        xs, ys = zip(*poly)
+        x1, y1 = int(min(xs)), int(min(ys))
+        x2, y2 = int(max(xs)), int(max(ys))
+        blocks.append((text, (x1, y1, x2, y2), float(score)))
+    return blocks

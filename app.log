@@ -1,0 +1,352 @@
+2025-07-14 19:52:57,839 INFO Application started. Press F8 to run OCR, ESC to exit.
+2025-07-14 19:52:58,389 DEBUG Attempting to release lock 2772700281536 on C:\Users\vitor\.cache\huggingface\hub\.locks\models--kha-white--manga-ocr-base\218bc3b6f1bce855a8d6eb86150de1f0407115627e68729ab36a6e4f33480ad9.lock
+2025-07-14 19:52:58,391 DEBUG Lock 2772700281536 released on C:\Users\vitor\.cache\huggingface\hub\.locks\models--kha-white--manga-ocr-base\218bc3b6f1bce855a8d6eb86150de1f0407115627e68729ab36a6e4f33480ad9.lock
+2025-07-14 19:53:24,873 INFO Starting OCR cycle
+2025-07-14 19:53:25,863 INFO Detected 2 bubbles
+2025-07-14 19:53:25,877 INFO No OCR text detected in any bubble. Skipping translation.
+2025-07-14 19:58:34,059 INFO Application started. Press F8 to run OCR, ESC to exit.
+2025-07-14 19:58:40,549 INFO Starting OCR cycle
+2025-07-14 19:58:41,450 INFO Detected 2 bubbles
+2025-07-14 19:58:41,893 INFO OCR extracted 2 bubbles
+2025-07-14 19:58:41,893 DEBUG Raw OCR blocks: [('なにか．．．', (0, 0, 186, 289), 1.0, 0), ('いい方法は：', (0, 0, 217, 309), 1.0, 0)]
+2025-07-14 19:58:41,893 DEBUG OCR blocks: [('なにか．．．', (0, 0, 186, 289), 1.0, 0), ('いい方法は：', (0, 0, 217, 309), 1.0, 0)]
+2025-07-14 19:58:42,177 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 19:58:43,769 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 19:58:43,769 INFO Translation complete
+2025-07-14 19:58:44,450 INFO Overlay updated
+2025-07-14 19:58:44,450 INFO Timings per stage: grab_region=50.8ms, detect_bubbles=850.5ms, OCR - time to get text from image=476.4ms, time to get translations and show on screen=2523.6ms
+2025-07-14 20:19:30,603 INFO Application started. Press F8 to run OCR, ESC to exit.
+2025-07-14 20:19:32,819 INFO Starting OCR cycle
+2025-07-14 20:19:33,749 INFO Detected 2 bubbles
+2025-07-14 20:19:34,178 INFO OCR extracted 2 bubbles
+2025-07-14 20:19:34,178 DEBUG Raw OCR blocks: [('なにか．．．', (0, 0, 186, 289), 1.0, 0), ('いい方法は：', (0, 0, 217, 309), 1.0, 0)]
+2025-07-14 20:19:34,178 DEBUG OCR blocks: [('なにか．．．', (0, 0, 186, 289), 1.0, 0), ('いい方法は：', (0, 0, 217, 309), 1.0, 0)]
+2025-07-14 20:19:34,460 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 20:19:34,667 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 20:19:34,667 INFO Translation complete
+2025-07-14 20:19:34,718 INFO Overlay updated
+2025-07-14 20:19:34,718 INFO Timings per stage: grab_region=51.6ms, detect_bubbles=879.0ms, OCR - time to get text from image=459.9ms, time to get translations and show on screen=508.9ms
+2025-07-14 20:24:29,338 INFO Application started. Press F8 to run OCR, ESC to exit.
+2025-07-14 20:24:31,723 INFO Starting OCR cycle
+2025-07-14 20:24:32,578 INFO Detected 2 bubbles
+2025-07-14 20:24:32,993 INFO OCR extracted 2 bubbles
+2025-07-14 20:24:32,993 DEBUG Raw OCR blocks: [('なにか．．．', (0, 0, 186, 289), 1.0, 0), ('いい方法は：', (0, 0, 217, 309), 1.0, 0)]
+2025-07-14 20:24:32,993 DEBUG OCR blocks: [('なにか．．．', (0, 0, 186, 289), 1.0, 0), ('いい方法は：', (0, 0, 217, 309), 1.0, 0)]
+2025-07-14 20:24:33,239 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 20:24:33,457 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 20:24:33,457 INFO Translation complete
+2025-07-14 20:24:33,502 INFO Overlay updated
+2025-07-14 20:24:33,502 INFO Timings per stage: grab_region=51.1ms, detect_bubbles=804.6ms, OCR - time to get text from image=445.9ms, time to get translations and show on screen=478.1ms
+2025-07-14 20:30:32,404 INFO Application started. Press F8 to run OCR, ESC to exit.
+2025-07-14 20:31:36,386 INFO Starting OCR cycle
+2025-07-14 20:31:37,268 INFO Detected 2 bubbles
+2025-07-14 20:31:37,719 INFO OCR extracted 2 bubbles
+2025-07-14 20:31:37,719 DEBUG Raw OCR blocks: [('いい方法は：', (0, 0, 217, 309), 1.0, 0), ('なにか．．．', (0, 0, 186, 289), 1.0, 0)]
+2025-07-14 20:31:37,720 DEBUG OCR blocks: [('いい方法は：', (0, 0, 217, 309), 1.0, 0), ('なにか．．．', (0, 0, 186, 289), 1.0, 0)]
+2025-07-14 20:31:38,250 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 20:31:38,469 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 20:31:38,469 INFO Translation complete
+2025-07-14 20:31:38,523 INFO Overlay updated
+2025-07-14 20:31:38,524 INFO Timings per stage: grab_region=47.5ms, detect_bubbles=834.2ms, OCR - time to get text from image=483.5ms, time to get translations and show on screen=771.5ms
+2025-07-14 20:39:58,597 INFO Application started. Press F8 to run OCR, ESC to exit.
+2025-07-14 20:40:00,913 INFO Starting OCR cycle
+2025-07-14 20:40:01,805 INFO Detected 2 bubbles
+2025-07-14 20:40:02,247 INFO OCR extracted 2 bubbles
+2025-07-14 20:40:02,247 DEBUG Raw OCR blocks: [('いい方法は：', (0, 0, 217, 309), 1.0, 0), ('なにか．．．', (0, 0, 186, 289), 1.0, 0)]
+2025-07-14 20:40:02,247 DEBUG OCR blocks: [('いい方法は：', (0, 0, 217, 309), 1.0, 0), ('なにか．．．', (0, 0, 186, 289), 1.0, 0)]
+2025-07-14 20:40:02,511 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 20:40:02,706 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 20:40:02,706 INFO Translation complete
+2025-07-14 20:40:02,765 INFO Overlay updated
+2025-07-14 20:40:02,765 INFO Timings per stage: grab_region=51.0ms, detect_bubbles=840.7ms, OCR - time to get text from image=471.8ms, time to get translations and show on screen=488.0ms
+2025-07-14 20:44:42,331 INFO Application started. Press F8 to run OCR, ESC to exit.
+2025-07-14 20:45:00,322 INFO Starting OCR cycle
+2025-07-14 20:45:01,266 INFO Detected 2 bubbles
+2025-07-14 20:48:44,227 INFO Application started. Press F8 to run OCR, ESC to exit.
+2025-07-14 20:48:47,919 INFO Starting OCR cycle
+2025-07-14 20:48:48,860 INFO Detected 2 bubbles
+2025-07-14 20:50:12,821 INFO Application started. Press F8 to run OCR, ESC to exit.
+2025-07-14 20:50:17,629 INFO Starting OCR cycle
+2025-07-14 20:50:18,531 INFO Detected 2 bubbles
+2025-07-14 20:56:59,945 INFO Application started. Press F8 to run OCR, ESC to exit.
+2025-07-14 20:57:01,161 INFO Starting OCR cycle
+2025-07-14 20:57:02,124 INFO Detected 2 bubbles
+2025-07-14 20:57:02,639 INFO OCR extracted 2 bubbles
+2025-07-14 20:57:02,640 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (555, 5, 740, 306), 1.0, 0)]
+2025-07-14 20:57:02,640 DEBUG OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (555, 5, 740, 306), 1.0, 0)]
+2025-07-14 20:57:03,145 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 20:57:03,432 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 20:57:03,433 INFO Translation complete
+2025-07-14 20:57:03,506 INFO Overlay updated
+2025-07-14 20:57:03,506 INFO Timings per stage: grab_region=54.4ms, detect_bubbles=908.4ms, OCR - time to get text from image=541.2ms, time to get translations and show on screen=841.2ms
+2025-07-14 21:35:47,104 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 21:35:49,291 INFO Starting OCR cycle
+2025-07-14 21:35:50,107 INFO Detected 2 bubbles
+2025-07-14 21:35:50,483 INFO OCR extracted 2 bubbles
+2025-07-14 21:35:50,483 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (555, 5, 740, 306), 1.0, 0)]
+2025-07-14 21:35:50,775 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 21:35:50,995 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 21:35:50,995 INFO Translation complete
+2025-07-14 21:35:50,996 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:35:51,007 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:35:51,049 INFO Overlay updated
+2025-07-14 21:39:43,265 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 21:39:46,913 INFO Starting OCR cycle
+2025-07-14 21:39:47,741 INFO Detected 2 bubbles
+2025-07-14 21:39:48,129 INFO OCR extracted 2 bubbles
+2025-07-14 21:39:48,130 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (555, 5, 740, 306), 1.0, 0)]
+2025-07-14 21:39:48,322 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 21:39:48,513 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 21:39:48,513 INFO Translation complete
+2025-07-14 21:39:48,515 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:39:48,524 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:39:48,559 INFO Overlay updated
+2025-07-14 21:41:53,923 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 21:41:56,793 INFO Starting OCR cycle
+2025-07-14 21:42:08,182 INFO Detected 2 bubbles
+2025-07-14 21:42:08,697 INFO OCR extracted 2 bubbles
+2025-07-14 21:42:08,698 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (555, 5, 740, 306), 1.0, 0)]
+2025-07-14 21:42:08,901 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 21:42:09,111 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 21:42:09,111 INFO Translation complete
+2025-07-14 21:43:46,233 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:45:38,866 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:49:02,673 INFO Overlay updated
+2025-07-14 21:49:30,440 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 21:49:33,834 INFO Starting OCR cycle
+2025-07-14 21:49:44,170 INFO Detected 5 bubbles
+2025-07-14 21:49:47,360 INFO OCR extracted 5 bubbles
+2025-07-14 21:49:47,361 DEBUG Raw OCR blocks: [('これからは、ここで大丈夫ですが、出会いになりましたが、それによってはお客様になっていただけることはありません。今まではないと思いますのでしょうからないのですければ、ことでした。', (115, 563, 741, 810), 1.0, 0), ('Ｃｏｐｙｒｉｇｅｒ．ａｕｔｏ＿ｔｒｏｙ＿ｍｅｓのお', (98, 318, 361, 348), 1.0, 0), ('これまでは自分自身の自分になっているのですが、なんですから、', (64, 203, 563, 234), 1.0, 0), ('ｔｏｓｔａｎｔｅｒ．Ｅｃｔｉｏｎｔ．）', (48, 430, 280, 463), 1.0, 0), ('２０１８年１０月２０日（土）ですのですが、それではなかったのでありません。', (7, 179, 564, 248), 1.0, 0)]
+2025-07-14 21:49:48,523 DEBUG Translated: これからは、ここで大丈夫ですが、出会いになりましたが、それによってはお客様になっていただけることはありません。今まではないと思いますのでしょうからないのですければ、ことでした。 -> From now on, we'll be fine here, but we've met, but depending on that, we won't be able to become a customer. I'm sure I don't think it's been around before, so it was a problem.
+2025-07-14 21:49:49,361 DEBUG Translated: Ｃｏｐｙｒｉｇｅｒ．ａｕｔｏ＿ｔｒｏｙ＿ｍｅｓのお -> Copyriger. Auto_trony_mes's
+2025-07-14 21:49:50,122 DEBUG Translated: これまでは自分自身の自分になっているのですが、なんですから、 -> Until now, I have become my own self, but what is it?
+2025-07-14 21:49:50,572 DEBUG Translated: ｔｏｓｔａｎｔｅｒ．Ｅｃｔｉｏｎｔ．） -> Tostanter. Ection. )
+2025-07-14 21:49:52,249 DEBUG Translated: ２０１８年１０月２０日（土）ですのですが、それではなかったのでありません。 -> It was Saturday, October 20th, 2018, but that wasn't the case.
+2025-07-14 21:49:52,250 INFO Translation complete
+2025-07-14 21:50:32,246 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:50:32,277 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:50:32,282 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:50:32,292 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:50:32,297 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:50:33,259 INFO Overlay updated
+2025-07-14 21:50:48,032 INFO Starting OCR cycle
+2025-07-14 21:50:53,653 INFO Detected 6 bubbles
+2025-07-14 21:50:57,663 INFO OCR extracted 6 bubbles
+2025-07-14 21:50:57,663 DEBUG Raw OCR blocks: [('そんなことになってくれていたのですが、これまではなかったということでしょうか。それはそれでもないと思っていましたが、それがあるのであればかりませんでした。ことは、そうからないまです。これですね。そのでは、このでもしたらですから、こと思います。そう。', (147, 543, 760, 735), 1.0, 0), ('そういうことですのですが．．．かわいいですから、', (36, 318, 361, 348), 1.0, 0), ('これからはお客様の個人情報につきましては、お客さまでの', (63, 203, 563, 234), 1.0, 0), ('Ｒｕｓａｔｏｍ、ＥＣｔｒｏｕｔ：）', (35, 431, 284, 464), 1.0, 0), ('これは、これまでになっていたのですが、このままではないということです。これから、', (0, 548, 639, 842), 1.0, 0), ('２０１７年１２月２７日土のチャーネットを使っておりますので、お客様のご', (6, 174, 564, 247), 1.0, 0)]
+2025-07-14 21:50:58,863 DEBUG Translated: そんなことになってくれていたのですが、これまではなかったということでしょうか。それはそれでもないと思っていましたが、それがあるのであればかりませんでした。ことは、そうからないまです。これですね。そのでは、このでもしたらですから、こと思います。そう。 -> That's what happened, but I guess it's never been before. I thought that wasn't the case, but if that was the case, it didn't work. That's not the case. This is it. So, I think this is what I'll do. yes.
+2025-07-14 21:50:59,554 DEBUG Translated: そういうことですのですが．．．かわいいですから、 -> That's what it is. . . Because it's cute,
+2025-07-14 21:51:00,754 DEBUG Translated: これからはお客様の個人情報につきましては、お客さまでの -> From now on, we will be accepting customer personal information.
+2025-07-14 21:51:02,149 DEBUG Translated: Ｒｕｓａｔｏｍ、ＥＣｔｒｏｕｔ：） -> Rusatom, ECtrout:)
+2025-07-14 21:51:03,551 DEBUG Translated: これは、これまでになっていたのですが、このままではないということです。これから、 -> This means that it has been around for a while, but it has not continued as it is. from now,
+2025-07-14 21:51:04,949 DEBUG Translated: ２０１７年１２月２７日土のチャーネットを使っておりますので、お客様のご -> We are using charnet on Saturday, December 27th, 2017, so you can use our customers'
+2025-07-14 21:51:04,950 INFO Translation complete
+2025-07-14 21:51:24,672 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:51:24,701 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:51:24,706 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:51:24,715 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:51:24,720 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:51:24,732 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:51:26,240 INFO Overlay updated
+2025-07-14 21:51:31,450 INFO Starting OCR cycle
+2025-07-14 21:51:41,351 INFO Detected 8 bubbles
+2025-07-14 21:51:47,080 INFO OCR extracted 8 bubbles
+2025-07-14 21:51:47,080 DEBUG Raw OCR blocks: [('例えば、このように見えますが、それではなく、地下鉄にあった地位、地域によっては、ありがとうございます。それは、これまでの問題がありません。これからです。こころですからないまですね。ころが、ことが、お願いまりまでしょうから、そのですがあるからにないう。', (131, 541, 763, 702), 1.0, 0), ('その時、「いつの中でもどうでもいいんですか」', (43, 318, 361, 348), 1.0, 0), ('そうね。それではないかもしれませんでしょうか。', (0, 206, 566, 235), 1.0, 0), ('Ｒｕｓａｔｏｍ、ＥＣｔｒｏｕｔ：）', (35, 431, 284, 464), 1.0, 0), ('ｕｓｉｎｇ．ｄｅｆａｕｔ．ｕｓｔｎｇｒｅｆｉｌｔ．ｄｓｉｍｇ．ｃｅｆｏｌｔ、ｕｓｌｎｇｏｅｆｆａｄｔ．ｗｓｉｐｇ．ｔａｌｔ，ｕｓ１ｎｇ－ｄｅｒｄａｄｉｇ．', (263, 725, 372, 839), 1.0, 0), ('ＴｈａｔｅはＰｅａｕｓ', (729, 443, 766, 475), 1.0, 0), ('しかし、２０１７年８月２８日（日）ですが、それではありませんが、お客様にお願いします。お客さんの', (5, 163, 564, 251), 1.0, 0), ('これからは、このようなものですが、これまでは', (0, 544, 547, 841), 1.0, 0)]
+2025-07-14 21:51:48,473 DEBUG Translated: 例えば、このように見えますが、それではなく、地下鉄にあった地位、地域によっては、ありがとうございます。それは、これまでの問題がありません。これからです。こころですからないまですね。ころが、ことが、お願いまりまでしょうから、そのですがあるからにないう。 -> For example, this may look like this, but not just that, depending on the position and region that I had on the subway, I would like to thank you. That's no problem so far. It's now. It's not just my heart. I'm sure there's something to be asked to do, so it's not because there's something.
+2025-07-14 21:51:48,760 DEBUG Translated: その時、「いつの中でもどうでもいいんですか」 -> At that time, "Do you care about it anytime?"
+2025-07-14 21:51:49,666 DEBUG Translated: そうね。それではないかもしれませんでしょうか。 -> That's right. Maybe that's not the case?
+2025-07-14 21:51:49,868 DEBUG Translated: Ｒｕｓａｔｏｍ、ＥＣｔｒｏｕｔ：） -> Rusatom, ECtrout:)
+2025-07-14 21:51:50,899 DEBUG Translated: ｕｓｉｎｇ．ｄｅｆａｕｔ．ｕｓｔｎｇｒｅｆｉｌｔ．ｄｓｉｍｇ．ｃｅｆｏｌｔ、ｕｓｌｎｇｏｅｆｆａｄｔ．ｗｓｉｐｇ．ｔａｌｔ，ｕｓ１ｎｇ－ｄｅｒｄａｄｉｇ． -> Using. Defaut. usstngrefilt. dsimg. Cefolt, uslngoefadt. wsipg. talt, us1ng-derdadig.
+2025-07-14 21:51:52,209 DEBUG Translated: ＴｈａｔｅはＰｅａｕｓ -> The same is Peaus
+2025-07-14 21:51:53,262 DEBUG Translated: しかし、２０１７年８月２８日（日）ですが、それではありませんが、お客様にお願いします。お客さんの -> However, it is Sunday, August 28th, 2017, but that is not the case, but please contact us. Customer's
+2025-07-14 21:51:54,069 DEBUG Translated: これからは、このようなものですが、これまでは -> From now on, it's something like this, but so far
+2025-07-14 21:51:54,070 INFO Translation complete
+2025-07-14 21:52:01,906 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:52:01,951 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:52:01,958 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:52:01,966 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:52:01,970 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:52:01,983 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:52:01,988 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:52:02,002 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:52:02,652 INFO Overlay updated
+2025-07-14 21:52:08,696 INFO Starting OCR cycle
+2025-07-14 21:52:09,406 INFO Detected 2 bubbles
+2025-07-14 21:52:09,907 INFO OCR extracted 2 bubbles
+2025-07-14 21:52:09,907 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (555, 5, 740, 305), 1.0, 0)]
+2025-07-14 21:52:10,128 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 21:52:10,331 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 21:52:10,331 INFO Translation complete
+2025-07-14 21:52:21,950 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:52:21,957 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:52:26,586 INFO Overlay updated
+2025-07-14 21:58:09,462 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 21:58:12,562 INFO Starting OCR cycle
+2025-07-14 21:58:13,685 INFO Detected 2 bubbles
+2025-07-14 21:58:14,179 INFO OCR extracted 2 bubbles
+2025-07-14 21:58:14,179 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (555, 5, 740, 306), 1.0, 0)]
+2025-07-14 21:58:14,379 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 21:58:14,595 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 21:58:14,595 INFO Translation complete
+2025-07-14 21:58:41,204 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:58:41,217 DEBUG Bubble at screen (690,599), size 217×308
+2025-07-14 21:58:41,221 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 21:58:41,226 DEBUG Bubble at screen (1130,133), size 185×301
+2025-07-14 22:02:11,161 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 22:02:16,919 INFO Starting OCR cycle
+2025-07-14 22:02:17,863 INFO Detected 2 bubbles
+2025-07-14 22:02:18,472 INFO OCR extracted 2 bubbles
+2025-07-14 22:02:18,473 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (557, 5, 737, 306), 1.0, 0)]
+2025-07-14 22:02:18,690 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 22:02:18,919 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 22:02:18,919 INFO Translation complete
+2025-07-14 22:02:42,782 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 22:02:42,794 DEBUG Bubble at screen (690,599), size 217×308
+2025-07-14 22:02:42,800 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 22:02:42,804 DEBUG Bubble at screen (1132,133), size 180×301
+2025-07-14 22:02:47,115 INFO Overlay updated
+2025-07-14 22:07:05,229 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 22:07:08,893 INFO Starting OCR cycle
+2025-07-14 22:07:09,827 INFO Detected 2 bubbles
+2025-07-14 22:07:10,278 INFO OCR extracted 2 bubbles
+2025-07-14 22:07:10,278 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (556, 7, 739, 306), 1.0, 0)]
+2025-07-14 22:07:10,585 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 22:07:10,784 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 22:07:10,784 INFO Translation complete
+2025-07-14 22:07:10,786 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 22:07:10,796 DEBUG Bubble at screen (115,471), size 217×308
+2025-07-14 22:07:10,799 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 22:07:10,803 DEBUG Bubble at screen (556,7), size 183×299
+2025-07-14 22:07:10,804 INFO Overlay updated
+2025-07-14 22:12:17,903 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 22:12:21,155 INFO Starting OCR cycle
+2025-07-14 22:12:22,047 INFO Detected 2 bubbles
+2025-07-14 22:12:22,493 INFO OCR extracted 2 bubbles
+2025-07-14 22:12:22,494 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (556, 7, 739, 306), 1.0, 0)]
+2025-07-14 22:12:22,729 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 22:12:22,913 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 22:12:22,913 INFO Translation complete
+2025-07-14 22:12:22,916 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 22:12:22,926 DEBUG Bubble at screen (115,471), size 217×308
+2025-07-14 22:12:22,930 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 22:12:22,932 DEBUG Bubble at screen (556,7), size 183×299
+2025-07-14 22:12:22,933 INFO Overlay updated
+2025-07-14 22:36:02,873 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 22:36:10,715 INFO Starting OCR cycle
+2025-07-14 22:36:11,636 INFO Detected 2 bubbles
+2025-07-14 22:36:12,055 INFO OCR extracted 2 bubbles
+2025-07-14 22:36:12,056 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (556, 7, 739, 306), 1.0, 0)]
+2025-07-14 22:36:12,312 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 22:36:12,520 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 22:36:12,520 INFO Translation complete
+2025-07-14 22:36:12,521 ERROR [draw_translated_bubbles] 'numpy.ndarray' object has no attribute 'crop'
+2025-07-14 22:36:12,522 ERROR [draw_translated_bubbles] 'numpy.ndarray' object has no attribute 'crop'
+2025-07-14 22:36:12,522 INFO Overlay updated
+2025-07-14 22:54:17,177 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 22:54:21,093 INFO Starting OCR cycle
+2025-07-14 22:54:22,275 INFO Detected 2 bubbles
+2025-07-14 22:54:22,834 INFO OCR extracted 2 bubbles
+2025-07-14 22:54:22,835 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (556, 7, 739, 306), 1.0, 0)]
+2025-07-14 22:54:23,025 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 22:54:23,220 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 22:54:23,221 INFO Translation complete
+2025-07-14 22:54:23,225 WARNING Could not load 'fonts/AnimeAce2BB.ttf', using default font.
+2025-07-14 22:54:23,241 WARNING Could not load 'fonts/AnimeAce2BB.ttf', using default font.
+2025-07-14 22:54:23,245 INFO Overlay updated
+2025-07-14 22:55:59,089 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 22:56:19,355 INFO Starting OCR cycle
+2025-07-14 22:56:20,462 INFO Detected 2 bubbles
+2025-07-14 22:56:21,039 INFO OCR extracted 2 bubbles
+2025-07-14 22:56:21,040 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (556, 7, 739, 306), 1.0, 0)]
+2025-07-14 22:56:21,250 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 22:56:21,479 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 22:56:21,480 INFO Translation complete
+2025-07-14 22:56:21,484 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 22:56:21,498 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 22:56:21,502 INFO Overlay updated
+2025-07-14 23:00:44,187 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 23:01:02,355 INFO Starting OCR cycle
+2025-07-14 23:01:03,218 INFO Detected 2 bubbles
+2025-07-14 23:01:03,634 INFO OCR extracted 2 bubbles
+2025-07-14 23:01:03,634 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (556, 7, 739, 306), 1.0, 0)]
+2025-07-14 23:01:03,860 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 23:01:04,037 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 23:01:04,037 INFO Translation complete
+2025-07-14 23:01:04,040 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 23:01:04,054 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 23:01:04,058 INFO Overlay updated
+2025-07-14 23:03:13,037 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 23:03:25,163 INFO Starting OCR cycle
+2025-07-14 23:03:26,016 INFO Detected 2 bubbles
+2025-07-14 23:03:26,428 INFO OCR extracted 2 bubbles
+2025-07-14 23:03:26,429 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (556, 7, 739, 306), 1.0, 0)]
+2025-07-14 23:03:26,626 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 23:03:26,824 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 23:03:26,825 INFO Translation complete
+2025-07-14 23:03:26,828 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 23:03:26,841 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 23:03:26,844 INFO Overlay updated
+2025-07-14 23:04:51,706 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 23:04:57,153 INFO Starting OCR cycle
+2025-07-14 23:04:57,989 INFO Detected 2 bubbles
+2025-07-14 23:04:58,396 INFO OCR extracted 2 bubbles
+2025-07-14 23:04:58,396 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (556, 7, 739, 306), 1.0, 0)]
+2025-07-14 23:04:58,589 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 23:04:58,780 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 23:04:58,782 INFO Translation complete
+2025-07-14 23:04:58,789 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 23:04:58,807 WARNING Failed to load font at fonts/AnimeAce2BB.ttf, using default.
+2025-07-14 23:04:58,812 INFO Overlay updated
+2025-07-14 23:15:18,384 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 23:15:25,176 INFO Starting OCR cycle
+2025-07-14 23:15:26,051 INFO Detected 2 bubbles
+2025-07-14 23:15:26,475 INFO OCR extracted 2 bubbles
+2025-07-14 23:15:26,475 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (556, 7, 739, 306), 1.0, 0)]
+2025-07-14 23:15:26,671 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 23:15:26,909 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 23:15:26,909 INFO Translation complete
+2025-07-14 23:15:26,958 INFO Overlay updated
+2025-07-14 23:15:58,306 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 23:16:02,121 INFO Starting OCR cycle
+2025-07-14 23:16:03,053 INFO Detected 2 bubbles
+2025-07-14 23:16:03,520 INFO OCR extracted 2 bubbles
+2025-07-14 23:16:03,521 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (557, 7, 738, 306), 1.0, 0)]
+2025-07-14 23:16:03,704 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 23:16:03,879 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 23:16:03,880 INFO Translation complete
+2025-07-14 23:16:03,901 INFO Overlay updated
+2025-07-14 23:16:34,420 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 23:16:36,870 INFO Starting OCR cycle
+2025-07-14 23:16:37,734 INFO Detected 2 bubbles
+2025-07-14 23:16:38,137 INFO OCR extracted 2 bubbles
+2025-07-14 23:16:38,137 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (556, 7, 739, 306), 1.0, 0)]
+2025-07-14 23:16:38,339 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 23:16:38,797 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 23:16:38,797 INFO Translation complete
+2025-07-14 23:16:38,819 INFO Overlay updated
+2025-07-14 23:18:56,194 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 23:18:56,966 INFO Starting OCR cycle
+2025-07-14 23:18:57,901 INFO Detected 2 bubbles
+2025-07-14 23:18:58,361 INFO OCR extracted 2 bubbles
+2025-07-14 23:18:58,361 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (556, 7, 739, 306), 1.0, 0)]
+2025-07-14 23:18:58,535 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 23:18:58,704 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 23:18:58,704 INFO Translation complete
+2025-07-14 23:18:58,727 INFO Overlay updated
+2025-07-14 23:21:07,212 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 23:21:08,814 INFO Starting OCR cycle
+2025-07-14 23:21:09,677 INFO Detected 2 bubbles
+2025-07-14 23:21:10,090 INFO OCR extracted 2 bubbles
+2025-07-14 23:21:10,091 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (557, 7, 738, 306), 1.0, 0)]
+2025-07-14 23:21:10,274 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 23:21:10,466 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 23:21:10,467 INFO Translation complete
+2025-07-14 23:21:10,499 INFO Overlay updated
+2025-07-14 23:21:38,689 INFO App ready. Press F8 to start OCR, ESC to quit.
+2025-07-14 23:21:40,418 INFO Starting OCR cycle
+2025-07-14 23:21:41,278 INFO Detected 2 bubbles
+2025-07-14 23:21:41,690 INFO OCR extracted 2 bubbles
+2025-07-14 23:21:41,690 DEBUG Raw OCR blocks: [('いい方法は：', (115, 471, 332, 779), 1.0, 0), ('なにか．．．', (556, 7, 739, 306), 1.0, 0)]
+2025-07-14 23:21:41,892 DEBUG Translated: いい方法は： -> A good way is:
+2025-07-14 23:21:42,139 DEBUG Translated: なにか．．． -> something. . .
+2025-07-14 23:21:42,139 INFO Translation complete
+2025-07-14 23:21:42,161 INFO Overlay updated

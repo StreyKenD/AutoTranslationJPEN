@@ -1,167 +1,133 @@
+# app.py (single-canvas refactor)
 import tkinter as tk
 import keyboard
-from core.capture import grab_region
-from core.yolo_bubble import detect_bubbles, sort_bubbles_for_japanese
-from core.ocr import extract_text_from_bubbles, ocr_single_bubble
-from core.translate import translate_batch
-from core.ui_overlay import destroy_status_overlay, show_overlay, show_status_overlay
-from core.logger import setup_logger
 import logging
-import cv2
-from core.ui_pillow_bubble import draw_bubbles_on_canvas
-import time
-import numpy as np
-from typing import Tuple
+
+from PIL import Image
+from core.logger import setup_logger
+from core.pipeline import process_region
+from core.ui.overlay import destroy_status_overlay, show_status_overlay
+from core.ui.drawer import draw_translated_bubbles
+from core.capture import grab_region
 
 setup_logger()
+logger = logging.getLogger(__name__)
 
-def main():
-    region = {"top": 128, "left": 575, "width": 768, "height": 864}
-    block_rects = []
-    bubbles_visible = True
-    bubble_canvas_items = []
+REGION = {"top": 128, "left": 575, "width": 768, "height": 864}
+CANVAS_BG = "#FF00FF"  # transparent key color
 
-    def toggle_bubbles():
-        nonlocal bubbles_visible, block_rects, bubble_canvas_items
-        bubbles_visible = not bubbles_visible
-        if not bubbles_visible:
-            for r in block_rects:
-                r.destroy()
-            block_rects.clear()
-            for item in bubble_canvas_items:
-                bubble_canvas.delete(item)
-            bubble_canvas_items.clear()
-            logging.info("Bubbles hidden")
-        else:
-            logging.info("Bubbles toggle ON — will reappear after next OCR cycle")
 
-    def run_ocr_cycle():
-        nonlocal block_rects
-        nonlocal bubble_canvas_items
-        timings = {}
-        t0 = time.perf_counter()
-        logging.info("Starting OCR cycle")
-
-        for r in block_rects:
-            r.destroy()
-        block_rects.clear()
-
-        destroy_status_overlay()
-        show_status_overlay(root, region, "Getting image...")
-
-        img = grab_region(region)
-        t1 = time.perf_counter()
-        timings['grab_region'] = t1 - t0
-
-        destroy_status_overlay()
-        show_status_overlay(root, region, "Getting bubbles...")
-
-        bubble_crops = detect_bubbles(img)
-        bubble_crops = sort_bubbles_for_japanese(bubble_crops)
-        logging.info(f"Detected {len(bubble_crops)} bubbles")
-        # logging.debug(f"Bubble crops: {bubble_crops}")
-        if not bubble_crops:
-            logging.info("No bubbles detected. Skipping OCR.")
-            show_status_overlay(root, region, "No bubbles found.")
-            return
-        
-        t2 = time.perf_counter()
-        timings['detect_bubbles'] = t2 - t1
-
-        destroy_status_overlay()
-        show_status_overlay(root, region, "Getting texts...")
-        raw_blocks = []
-        for crop, offset in bubble_crops:
-            raw_blocks.extend(extract_text_from_bubbles([(crop, offset)]))
-
-        if not raw_blocks:
-            logging.info("No OCR text detected in any bubble. Skipping translation.")
-            show_status_overlay(root, region, "No text found.")
-            return
-        logging.info(f"OCR extracted {len(raw_blocks)} bubbles")
-
-        logging.debug(f"Raw OCR blocks: {raw_blocks}")
-        blocks = []
-        for text, (x1, y1, x2, y2), conf, angle in raw_blocks:
-            blocks.append((text, (x1, y1, x2, y2), conf, angle))
-        logging.debug(f"OCR blocks: {blocks}")
-
-        # Show OCR text first (no translation yet)
-        block_rects = show_overlay(root, region, blocks, show_translation=False)
-
-        t3 = time.perf_counter()
-        timings['OCR - time to get text from image'] = t3 - t2
-
-        destroy_status_overlay()
-        show_status_overlay(root, region, "Getting translations...")
-        # Collect just the OCR texts
-        texts = [b[0] for b in blocks]
-        translations = translate_batch(texts)
-        logging.info("Translation complete")
-
-        # Clear any prior overlays
-        if blocks and translations:
-            bubble_canvas_items = draw_bubbles_on_canvas(bubble_canvas, blocks, translations, region)
-
-        for r in block_rects:
-            r.destroy()
-        block_rects = show_overlay(root, region, blocks, translations, show_translation=True)
-        logging.info("Overlay updated")
-
-        t4 = time.perf_counter()
-        timings['time to get translations and show on screen'] = t4 - t3
-
-        logging.info("Timings per stage: " + ", ".join(f"{k}={v*1000:.1f}ms" for k,v in timings.items()))
-
-        show_status_overlay(root, region, "Complete!")
-
-    # Tkinter root window
+def build_root_window():
+    """Create a transparent, always-on-top root window."""
     root = tk.Tk()
     root.overrideredirect(True)
     root.attributes("-topmost", True)
     root.attributes("-transparentcolor", "white")
     root.configure(bg="white")
+    return root
 
-    region_rectangle = tk.Toplevel(root)
-    region_rectangle.overrideredirect(True)
-    region_rectangle.attributes("-topmost", True)
-    region_rectangle.geometry(f"{region['width']}x{region['height']}+{region['left']}+{region['top']}")
+
+def build_overlay_canvas(root, region):
+    """
+    Create a single overlay canvas for border + bubbles.
+    """
+    win = tk.Toplevel(root)
+    win.overrideredirect(True)
+    win.attributes("-topmost", True)
+    win.geometry(f"{region['width']}x{region['height']}+{region['left']}+{region['top']}")
+    # treat CANVAS_BG as transparent
     try:
-        region_rectangle.attributes("-transparentcolor", "cyan")
-        canvas = tk.Canvas(region_rectangle, width=region['width'], height=region['height'], bg='cyan', highlightthickness=0)
-    except Exception:
-        canvas = tk.Canvas(region_rectangle, width=region['width'], height=region['height'], bg='white', highlightthickness=0)
-    canvas.pack(fill="both", expand=True)
-    canvas.create_rectangle(2, 2, region['width']-2, region['height']-2, outline="red", width=4)
-    region_rectangle.lift(root)
+        win.attributes("-transparentcolor", CANVAS_BG)
+    except tk.TclError:
+        pass
 
-    # after you draw the red capture rectangle in main():
-    overlay = tk.Toplevel(root)
-    overlay.overrideredirect(True)
-    overlay.attributes("-topmost", True)
-    overlay.geometry(f"{region['width']}x{region['height']}+{region['left']}+{region['top']}")
-
-    MAGENTA = "#FF00FF"
-
-    # Tell Tkinter: treat MAGENTA pixels as fully transparent
-    overlay.attributes("-transparentcolor", MAGENTA)
-
-    # Create a canvas whose background is that same MAGENTA color
-    bubble_canvas = tk.Canvas(
-        overlay,
+    canvas = tk.Canvas(
+        win,
         width=region['width'],
         height=region['height'],
-        bg=MAGENTA,
+        bg=CANVAS_BG,
         highlightthickness=0
     )
-    bubble_canvas.pack(fill="both", expand=True)
-    bubble_canvas.create_oval(0, 0, 5, 5, fill='red')
+    canvas.pack(fill="both", expand=True)
+
+    canvas.create_rectangle(
+        0, 0,
+        region['width'] - 1,
+        region['height'] - 1,
+        outline='red',
+        width=4
+    )
+
+    return canvas
+
+
+def main():
+    root = build_root_window()
+    canvas = build_overlay_canvas(root, REGION)
+
+    bubble_items = []
+    bubbles_visible = True
+
+    def toggle_bubbles():
+        nonlocal bubbles_visible, bubble_items
+        bubbles_visible = not bubbles_visible
+        # remove drawn items
+        for item in bubble_items:
+            canvas.delete(item)
+        bubble_items.clear()
+        logger.info("Bubbles %s", "shown" if bubbles_visible else "hidden")
+
+    def run_ocr_cycle():
+        nonlocal bubble_items, bubbles_visible
+        logger.info("Starting OCR cycle")
+
+        destroy_status_overlay()
+        show_status_overlay(root, REGION, "Processing image...")
+
+        # clear old bubbles
+        for item in bubble_items:
+            canvas.delete(item)
+        bubble_items.clear()
+
+        # 1) grab raw screen as NumPy array
+        raw = grab_region(REGION)
+
+        # 2) convert BGR→RGB if needed, then to PIL
+        try:
+            import cv2
+            raw_rgb = cv2.cvtColor(raw, cv2.COLOR_BGR2RGB)
+        except ImportError:
+            raw_rgb = raw
+        region_img = Image.fromarray(raw_rgb)
+
+        # 3) run detection/OCR/translation on the raw NumPy image
+        blocks, translations = process_region(raw, REGION)
+
+        # Debug: draw border rectangles in blue
+        for text, (x1, y1, x2, y2), conf, angle in blocks:
+            x_screen = x1
+            y_screen = y1
+            w, h = x2 - x1, y2 - y1
+            # draw debug outline relative to canvas
+            rect = canvas.create_rectangle(x_screen, y_screen, x_screen + w, y_screen + h,
+                                           outline='blue', width=2)
+            bubble_items.append(rect)
+
+        # draw translated bubbles if visible
+        if bubbles_visible and blocks and translations:
+            bubble_items = draw_translated_bubbles(canvas, region_img, blocks, translations, REGION)
+            bubble_items.extend(bubble_items)
+
+        logger.info("Overlay updated")
+        show_status_overlay(root, REGION, "Complete!", auto_destroy_ms=1000)
 
     keyboard.add_hotkey('f8', run_ocr_cycle)
     keyboard.add_hotkey('f9', toggle_bubbles)
     keyboard.add_hotkey('esc', root.destroy)
-    logging.info("Application started. Press F8 to run OCR, ESC to exit.")
+
+    logger.info("App ready. Press F8 to start OCR, ESC to quit.")
     root.mainloop()
+
 
 if __name__ == "__main__":
     main()

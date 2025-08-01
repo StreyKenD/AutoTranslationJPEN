@@ -72,9 +72,10 @@ Swap out Google Translate for an offline engine (e.g. argos-translate or a local
 Or try the DeepL unofficial API for higher fidelity, then fall back to Google/LibreTranslate if it’s down.
 
 7. Live‑Video Mode
-Instead of “one shot per F8 press,” hook into a continuous capture loop (e.g. tkinter.after or a background thread) to process frames at, say, 2–3 FPS.
-
-Keep your YOLO model loaded once, and reuse it on each frame for near real‑time “manga‑lens” translation.
+You can now toggle a simple real‑time loop by pressing the ``video`` hotkey. The
+app captures frames at the configured ``video_fps`` and processes them
+continuously. The YOLO detector stays loaded, providing near real‑time
+translations.
 
 8. Bubble‑Detector Improvements
 Fine‑tune your YOLO model on your own manga pages for better recall/precision.
@@ -120,6 +121,7 @@ Return list of (text, bounding box).
 
 ⚙️ Module: translate.py
 Support: GoogleTranslator (deep-translator) or local MarianMT
+Select the engine via the ``translator`` field in ``config.json`` (``google`` or ``marian``).
 
 Function: def translate_batch(texts: List[str]) -> List[str]:
 
@@ -181,15 +183,45 @@ Edit `config.json` to customize hotkeys and other settings. Example:
   "hotkeys": {
     "ocr": "f8",
     "toggle_bubbles": "f9",
-    "quit": "esc"
+    "video": "f7",
+    "quit": "esc",
+    "history": "f6"
   },
   "bubble_padding": 8,
-  "replace_mode": false
+  "replace_mode": false,
+  "save_bubble_images": false,
+  "overflow_to_nearby": false,
+  "tooltip_overlay": true,
+  "align_smoothing": 0.5,
+  "translator": "google",
+  "video_fps": 2,
+  "ocr_confidence_threshold": 0.5
 }
 ```
 
+Set ``translator`` to ``marian`` to run the built-in MarianMT model offline.
+
 Translations are cached in ``translations.db`` to avoid duplicate API calls. A
 CSV file ``historico_traducoes.csv`` logs each translation for later reference.
+If ``save_bubble_images`` is set to ``true``, cropped bubble screenshots are
+stored under ``bubble_logs/`` with a ``bubbles.csv`` index.
+
+When ``ocr_confidence_threshold`` is greater than zero, the application logs a
+warning whenever Manga-OCR produces text below that heuristic score.
+
+Press the ``video`` hotkey to start or stop a real-time translation loop running
+at ``video_fps`` frames per second.
+
+Press the ``history`` hotkey to open a window listing previous translations.
+From there you can export the log as JSON or CSV and view the captured bubble
+image when available.
+
+If a translation cannot fit inside its bubble, enabling ``overflow_to_nearby``
+will draw the text alongside the bubble instead. Hover or click any translated
+bubble to view a tooltip showing both the original Japanese and the English
+translation. Set ``align_smoothing`` above zero to dampen small position changes
+between frames for a steadier overlay.
+
 
 ## Development Setup
 This project uses *pre-commit* with **flake8** for linting. After cloning, run:

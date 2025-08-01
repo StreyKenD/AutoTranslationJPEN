@@ -9,6 +9,7 @@ pillow==11.3.0
 requests==2.32.4
 urllib3==2.5.0
 deep_translator
+transformers
 opencv-python
 manga-ocr
 pre-commit

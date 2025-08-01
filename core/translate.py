@@ -2,6 +2,14 @@
 
 from deep_translator import GoogleTranslator
 from typing import List
+
+try:
+    from transformers import MarianMTModel, MarianTokenizer
+    import torch
+except Exception:  # pragma: no cover - optional dependency
+    MarianMTModel = None
+    MarianTokenizer = None
+    torch = None
 import logging
 import sqlite3
 import csv
@@ -16,6 +24,31 @@ _conn.execute(
 
 HISTORY_CSV = Path(__file__).resolve().parent.parent / "historico_traducoes.csv"
 
+TRANSLATOR = "google"
+_model = None
+_tokenizer = None
+
+
+def set_engine(engine: str) -> None:
+    """Select translation engine (``google`` or ``marian``)."""
+    global TRANSLATOR, _model, _tokenizer
+    engine = engine.lower()
+    if engine == "marian" and MarianMTModel and MarianTokenizer:
+        if _model is None or _tokenizer is None:
+            try:
+                _tokenizer = MarianTokenizer.from_pretrained(
+                    "Helsinki-NLP/opus-mt-ja-en"
+                )
+                _model = MarianMTModel.from_pretrained(
+                    "Helsinki-NLP/opus-mt-ja-en"
+                )
+            except Exception as e:  # pragma: no cover
+                logging.error("Failed to load MarianMT model: %s", e)
+                engine = "google"
+    elif engine != "google":
+        logging.warning("Unknown translator '%s', falling back to Google", engine)
+        engine = "google"
+    TRANSLATOR = engine
 
 def _lookup_cache(text: str) -> str | None:
     """Return cached translation if available."""
@@ -65,12 +98,22 @@ def translate_batch(texts: List[str]) -> List[str]:
             indices.append(i)
 
     if to_translate:
-        try:
-            translator = GoogleTranslator(source="ja", target="en")
-            translated = translator.translate_batch(to_translate)
-        except Exception as e:
-            logging.error("Google Translate batch error: %s", e)
-            translated = ["" for _ in to_translate]
+        if TRANSLATOR == "marian" and _model and _tokenizer:
+            try:
+                inputs = _tokenizer(to_translate, return_tensors="pt", padding=True)
+                with torch.no_grad():
+                    outputs = _model.generate(**inputs)
+                translated = _tokenizer.batch_decode(outputs, skip_special_tokens=True)
+            except Exception as e:
+                logging.error("MarianMT error: %s", e)
+                translated = ["" for _ in to_translate]
+        else:
+            try:
+                translator = GoogleTranslator(source="ja", target="en")
+                translated = translator.translate_batch(to_translate)
+            except Exception as e:
+                logging.error("Google Translate batch error: %s", e)
+                translated = ["" for _ in to_translate]
 
         for idx, src, trans in zip(indices, to_translate, translated):
             results[idx] = trans

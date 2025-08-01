@@ -10,10 +10,19 @@ DEFAULT_CONFIG = {
     "hotkeys": {
         "ocr": "f8",
         "toggle_bubbles": "f9",
-        "quit": "esc"
+        "video": "f7",
+        "quit": "esc",
+        "history": "f6"
     },
     "bubble_padding": 8,
-    "replace_mode": False
+    "replace_mode": False,
+    "save_bubble_images": False,
+    "overflow_to_nearby": False,
+    "tooltip_overlay": True,
+    "align_smoothing": 0.5,
+    "translator": "google",
+    "video_fps": 2,
+    "ocr_confidence_threshold": 0.5
 }
 
 CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.json"

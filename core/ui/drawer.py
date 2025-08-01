@@ -1,9 +1,10 @@
-# ui/drawer.py (refactored with dynamic font and real blurred background)
+"""Overlay drawing helpers."""
 import textwrap
 import logging
+import tkinter as tk
 from PIL import (
     Image, ImageDraw, ImageFont,
-    ImageTk, ImageFilter
+    ImageTk, ImageFilter,
 )
 
 # Settings (can be moved to config.py later)
@@ -16,24 +17,81 @@ CORNER_RADIUS = 10            # corner radius for overlay box
 
 logger = logging.getLogger(__name__)
 
-def draw_translated_bubbles(canvas, region_img, blocks, translations, region):
-    """
-    Draw translated bubbles on a single Tkinter canvas, placing each
-    translation into its corresponding bubble region with a blurred
-    background for readability.
+def draw_translated_bubbles(
+    canvas,
+    region_img,
+    blocks,
+    translations,
+    region,
+    replace_mode: bool = False,
+    overflow_to_nearby: bool = False,
+    show_tooltip: bool = True,
+    bubble_shape: str = "ellipse",
+    prev_coords: dict | None = None,
+    smoothing: float = 0.0,
+    coord_out: dict | None = None,
+):
+    """Draw translated bubbles on the canvas with optional UX helpers.
 
-    canvas: Tkinter Canvas to draw on
-    region_img: PIL.Image of the captured region
-    blocks: list of (orig_text, (x1,y1,x2,y2), conf, angle)
-    translations: list of translated strings matching blocks order
-    region: dict with 'left','top','width','height'
+    Parameters
+    ----------
+    canvas : ``tkinter.Canvas``
+        Canvas to draw on.
+    region_img : ``PIL.Image``
+        Captured region image.
+    blocks : list
+        Tuples ``(text, (x1, y1, x2, y2), conf, angle)``.
+    translations : list
+        Translated strings matching ``blocks`` order.
+    region : dict
+        Region info with ``left``, ``top``, ``width`` and ``height``.
+    replace_mode : bool
+        If ``True``, draw on a plain white background instead of
+        using the blurred patch.
+    overflow_to_nearby : bool, optional
+        When ``True``, draw text beside the bubble if it cannot fit inside.
+    show_tooltip : bool, optional
+        Display the original + translated text on hover.
+    bubble_shape : str, optional
+        Either ``"ellipse"`` or ``"rect"`` to control overlay geometry.
+    prev_coords : dict, optional
+        Previous coordinates keyed by translation for alignment smoothing.
+    smoothing : float, optional
+        Blend factor for position smoothing ``0``-``1``.
+    coord_out : dict, optional
+        Dictionary populated with the final coordinates for each translation.
     """
     canvas_items = []
-    # Keep references to PhotoImage to prevent GC
     if not hasattr(canvas, "images"):
         canvas.images = []
     canvas.images.clear()
 
+    if prev_coords is None:
+        prev_coords = {}
+    if coord_out is None:
+        coord_out = {}
+
+    tooltip_win = None
+
+    def show_tip(event, text):
+        nonlocal tooltip_win
+        if tooltip_win is not None:
+            tooltip_win.destroy()
+        x = event.x_root + 10
+        y = event.y_root + 10
+        tooltip_win = tk.Toplevel(canvas)
+        tooltip_win.overrideredirect(True)
+        tooltip_win.geometry(f"+{x}+{y}")
+        label = tk.Label(tooltip_win, text=text, bg="yellow", font=("Arial", 10))
+        label.pack()
+
+    def hide_tip(event=None):
+        nonlocal tooltip_win
+        if tooltip_win is not None:
+            tooltip_win.destroy()
+            tooltip_win = None
+
+    hide_tip()
     for (orig, (x1, y1, x2, y2), conf, angle), translated in zip(blocks, translations):
         try:
             w, h = x2 - x1, y2 - y1
@@ -48,26 +106,32 @@ def draw_translated_bubbles(canvas, region_img, blocks, translations, region):
             y2_rel = y2 - region_y
 
             patch = region_img.crop((x1_rel, y1_rel, x2_rel, y2_rel))
-            bg = patch.filter(ImageFilter.GaussianBlur(BLUR_RADIUS))
-
-            # 1.5: Darken the blurred patch slightly to improve contrast
-            overlay = Image.new("RGBA", bg.size, (0, 0, 0, 80))
-            bg = Image.alpha_composite(bg.convert("RGBA"), overlay)
-
-            # 1.6: White-wash the blur to completely hide underlying text
-            white_wash = Image.new("RGBA", bg.size, (255, 255, 255, BG_ALPHA))
-            bg = Image.alpha_composite(bg, white_wash)
+            if replace_mode:
+                bg = Image.new("RGBA", patch.size, (255, 255, 255, BG_ALPHA))
+            else:
+                bg = patch.filter(ImageFilter.GaussianBlur(BLUR_RADIUS))
+                overlay = Image.new("RGBA", bg.size, (0, 0, 0, 80))
+                bg = Image.alpha_composite(bg.convert("RGBA"), overlay)
+                white_wash = Image.new("RGBA", bg.size, (255, 255, 255, BG_ALPHA))
+                bg = Image.alpha_composite(bg, white_wash)
 
             # 2. Prepare overlay image and draw semi-transparent background
             img = Image.new("RGBA", (w, h))
 
+            mask = Image.new("L", (w, h), 0)
+            mask_draw = ImageDraw.Draw(mask)
             shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
             shadow_draw = ImageDraw.Draw(shadow)
-            shadow_draw.rounded_rectangle([(0, 0), (w, h)], radius=CORNER_RADIUS, fill=(0, 0, 0, 120))
+            if bubble_shape == "ellipse":
+                mask_draw.ellipse([(0, 0), (w, h)], fill=255)
+                shadow_draw.ellipse([(0, 0), (w, h)], fill=(0, 0, 0, 120))
+            else:
+                mask_draw.rounded_rectangle([(0, 0), (w, h)], radius=CORNER_RADIUS, fill=255)
+                shadow_draw.rounded_rectangle([(0, 0), (w, h)], radius=CORNER_RADIUS, fill=(0, 0, 0, 120))
             shadow_blurred = shadow.filter(ImageFilter.GaussianBlur(6))
             img.paste(shadow_blurred, (0, 0), shadow_blurred)
 
-            img.paste(bg, (0, 0))
+            img.paste(bg, (0, 0), mask)
             draw = ImageDraw.Draw(img, "RGBA")
 
             # 3. Determine dynamic font size
@@ -76,6 +140,7 @@ def draw_translated_bubbles(canvas, region_img, blocks, translations, region):
                 max(MIN_FONT_SIZE, int(w * 0.12))  # this caps font size if bubble is narrow
             )
 
+            overflow = False
             while True:
                 try:
                     font = ImageFont.truetype(FONT_PATH, font_size)
@@ -93,10 +158,34 @@ def draw_translated_bubbles(canvas, region_img, blocks, translations, region):
                     line_height = 16 + LINE_SPACING
 
                 total_text_height = len(lines) * line_height
+                width_overflow = False
+                for ln in lines:
+                    try:
+                        tw = font.getbbox(ln)[2]
+                    except AttributeError:
+                        tw = draw.textlength(ln, font=font)
+                    if tw > w - 10:
+                        width_overflow = True
+                        break
 
-                if total_text_height <= h - 10 or font_size <= MIN_FONT_SIZE:
+                if (total_text_height <= h - 10 and not width_overflow) or font_size <= MIN_FONT_SIZE:
+                    overflow = total_text_height > h - 10 or width_overflow
                     break
                 font_size -= 1
+
+            if overflow and overflow_to_nearby:
+                x_draw = x2 + 10
+                if x_draw + w > region["left"] + region["width"]:
+                    x_draw = x1 - w - 10
+                y_draw = y1
+            else:
+                x_draw = x1
+                y_draw = y1
+
+            if translated in prev_coords:
+                px, py = prev_coords[translated]
+                x_draw = int(px * smoothing + x_draw * (1 - smoothing))
+                y_draw = int(py * smoothing + y_draw * (1 - smoothing))
 
             # 6. Draw each line centered
             for i, line in enumerate(lines):
@@ -127,8 +216,15 @@ def draw_translated_bubbles(canvas, region_img, blocks, translations, region):
             # 7. Convert to PhotoImage and draw on canvas
             photo = ImageTk.PhotoImage(img)
             canvas.images.append(photo)
-            item = canvas.create_image(x1, y1, image=photo, anchor="nw")
+            item = canvas.create_image(x_draw, y_draw, image=photo, anchor="nw")
             canvas_items.append(item)
+            coord_out[translated] = (x_draw, y_draw)
+
+            if show_tooltip:
+                tooltip = f"{orig}\n{translated}"
+                canvas.tag_bind(item, "<Enter>", lambda e, t=tooltip: show_tip(e, t))
+                canvas.tag_bind(item, "<Leave>", hide_tip)
+                canvas.tag_bind(item, "<Button-1>", lambda e, t=tooltip: show_tip(e, t))
 
         except Exception as e:
             logger.error(f"[draw_translated_bubbles] Error: {e}")

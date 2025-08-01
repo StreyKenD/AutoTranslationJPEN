@@ -145,6 +145,7 @@ def main():
     tooltip_overlay = bool(cfg.get("tooltip_overlay", True))
     align_smoothing = float(cfg.get("align_smoothing", 0.5))
     bubble_shape = cfg.get("bubble_shape", "ellipse")
+
     set_engine(cfg.get("translator", "google"))
     fps = int(cfg.get("video_fps", 2))
     conf_threshold = float(cfg.get("ocr_confidence_threshold", 0.5))

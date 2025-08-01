@@ -9,6 +9,7 @@ from core.pipeline import process_region
 from core.ui.overlay import destroy_status_overlay, show_status_overlay
 from core.ui.drawer import draw_translated_bubbles
 from core.capture import grab_region
+from core.config import load_config
 
 setup_logger()
 logger = logging.getLogger(__name__)
@@ -62,6 +63,11 @@ def build_overlay_canvas(root, region):
 
 
 def main():
+    cfg = load_config()
+    hotkeys = cfg.get("hotkeys", {})
+    bubble_padding = int(cfg.get("bubble_padding", 0))
+    replace_mode = bool(cfg.get("replace_mode", False))
+
     root = build_root_window()
     canvas = build_overlay_canvas(root, REGION)
 
@@ -101,7 +107,8 @@ def main():
         region_img = Image.fromarray(raw_rgb)
 
         # 3) run detection/OCR/translation on the raw NumPy image
-        blocks, translations = process_region(raw, REGION)
+        timings = {}
+        blocks, translations = process_region(raw, REGION, bubble_padding, timings)
 
         # Debug: draw border rectangles in blue
         for text, (x1, y1, x2, y2), conf, angle in blocks:
@@ -115,17 +122,27 @@ def main():
 
         # draw translated bubbles if visible
         if bubbles_visible and blocks and translations:
-            bubble_items = draw_translated_bubbles(canvas, region_img, blocks, translations, REGION)
+            bubble_items = draw_translated_bubbles(
+                canvas,
+                region_img,
+                blocks,
+                translations,
+                REGION,
+                replace_mode=replace_mode,
+            )
             bubble_items.extend(bubble_items)
 
         logger.info("Overlay updated")
+        logger.info("Stage timings: %s", timings)
         show_status_overlay(root, REGION, "Complete!", auto_destroy_ms=1000)
 
-    keyboard.add_hotkey('f8', run_ocr_cycle)
-    keyboard.add_hotkey('f9', toggle_bubbles)
-    keyboard.add_hotkey('esc', root.destroy)
+    keyboard.add_hotkey(hotkeys.get('ocr', 'f8'), run_ocr_cycle)
+    keyboard.add_hotkey(hotkeys.get('toggle_bubbles', 'f9'), toggle_bubbles)
+    keyboard.add_hotkey(hotkeys.get('quit', 'esc'), root.destroy)
 
-    logger.info("App ready. Press F8 to start OCR, ESC to quit.")
+    logger.info("App ready. Press %s to start OCR, %s to quit.",
+                hotkeys.get('ocr', 'f8').upper(),
+                hotkeys.get('quit', 'esc').upper())
     root.mainloop()
 
 

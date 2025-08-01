@@ -8,12 +8,8 @@ import cv2
 
 logger = logging.getLogger(__name__)
 
-def process_region(img, region, timings=None):
-    """
-    Full pipeline: capture -> detect bubbles -> OCR -> translate
-    Returns: (blocks, translations)
-    blocks: list of tuples (text, (x1, y1, x2, y2), conf, angle)
-    """
+def process_region(img, region, bubble_padding: int = 0, timings=None):
+    """Run capture→detection→OCR→translate for a region."""
     import time
     t0 = time.perf_counter()
 
@@ -23,7 +19,7 @@ def process_region(img, region, timings=None):
     if timings is not None:
         timings['grab_region'] = t1 - t0
 
-    bubble_crops = detect_bubbles(img)
+    bubble_crops = detect_bubbles(img, padding=bubble_padding)
     logging.info(f"Detected {len(bubble_crops)} bubbles")
     if not bubble_crops:
         logging.info("No bubbles detected. Skipping OCR.")

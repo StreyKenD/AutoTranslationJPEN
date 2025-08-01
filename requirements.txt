@@ -10,5 +10,6 @@ requests==2.32.4
 urllib3==2.5.0
 deep_translator
 opencv-python
-paddleocr
-paddlepaddle
+manga-ocr
+pre-commit
+flake8

@@ -1,0 +1,18 @@
+{
+  "hotkeys": {
+    "ocr": "f8",
+    "toggle_bubbles": "f9",
+    "video": "f7",
+    "quit": "esc",
+    "history": "f6"
+  },
+  "bubble_padding": 8,
+  "replace_mode": false,
+  "save_bubble_images": false,
+  "overflow_to_nearby": false,
+  "tooltip_overlay": true,
+  "align_smoothing": 0.5,
+  "translator": "google",
+  "video_fps": 2,
+  "ocr_confidence_threshold": 0.5
+}

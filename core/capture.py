@@ -6,6 +6,7 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 os.makedirs("debug", exist_ok=True)
+DEBUG_IMAGES = os.environ.get("DEBUG_IMAGES") == "1"
 
 def grab_region(region: dict, target_width: int = 1000) -> np.ndarray:
     """
@@ -16,6 +17,7 @@ def grab_region(region: dict, target_width: int = 1000) -> np.ndarray:
     with mss.mss() as sct:
         frame = sct.grab(region)
     img = cv2.cvtColor(np.array(frame), cv2.COLOR_BGRA2RGB)
-    cv2.imwrite("debug/00_captured.png", img)
+    if DEBUG_IMAGES:
+        cv2.imwrite("debug/00_captured.png", img)
 
     return img

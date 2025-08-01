@@ -1,182 +1,70 @@
-# Migration & Improvement Spec: Tesseract → Manga-OCR
+# Manga Translator Pipeline — Migration & Improvement Spec
 
-.venv\Scripts\activate
+A local tool for translating manga images with automatic bubble detection and overlay.
 
-python app.py
+---
 
-These aren’t critical now but great upgrades later:
+## Quickstart
 
-🤖 Fine-tune a YOLO model just for manga speech bubbles
+1. Activate virtualenv:
+    ```bash
+    .venv\Scripts\activate
+    ```
 
-🧠 Fine-tune Manga-OCR with manga fonts
+2. Start the application:
+    ```bash
+    python app.py
+    ```
 
-💬 Add subtitle-mode: show all translations in corner
+---
 
-🔄 Auto-translate when page changes using hash/frame diff
+## Recommended Upgrades
 
-✅ D. UI / OVERLAY IMPROVEMENTS
-You're very close to Google Lens-level polish. Try these:
+- 🤖 **Fine-tune YOLO** for manga speech bubbles.
+- 🧠 **Fine-tune Manga-OCR** for manga fonts and layouts.
+- 💬 **Subtitle Mode:** Show all translations in a corner overlay.
+- 🔄 **Auto-translate:** Trigger on page change (hash/frame diff).
+- 🎨 **UI Polish:**
+  - Dynamic font sizing per bubble.
+  - Outline/drop shadow text for readability.
+  - Smooth fade-in overlay animations.
+- ⚡ **Performance:**
+  - Avoid redundant resizing.
+  - Use original image for YOLO, only resize for OCR.
+  - Parallelize OCR and translation (use `ThreadPoolExecutor`).
+  - Batch translation requests.
+  - Cache translations by original text.
+- 🔌 **Translation Engine:**
+  - Support offline engines (e.g. Argos, MarianMT, LibreTranslate).
+  - Optionally use DeepL via unofficial API.
+- 🖼 **Overlay:**
+  - Toggle between "replace in-place" and "show nearby".
+  - Detect overflow and reposition translation if needed.
+  - Tooltip to show both original and translated text.
+- 🕒 **Live-Video Mode:**
+  - Real-time processing loop, configurable FPS.
 
-1. Add dynamic font resizing
-Make the font size adapt to bubble height.
+---
 
-Auto-wrap if translated_text.length * font_size > width.
+## Project Goals
 
-2. Word-level translation preview (optional)
-Show OCR text briefly before translating.
+1. Replace Tesseract with Manga-OCR for all text extraction.
+2. Maintain same I/O: image files, screenshots.
+3. Support vertical Japanese text.
+4. Optimize speed via batch and parallel processing.
+5. Pluggable translation step after OCR.
+6. Clear, modular code organization:
+    - `capture.py` – capture/load images
+    - `ocr.py` – run Manga-OCR
+    - `translate.py` – translation APIs/models
+    - `ui_overlay.py` – draw overlays
+    - `main.py` – CLI & workflow glue
 
-Might help if you want users to optionally skip mistranslations.
-
-3. Outline / drop shadow text for readability
-In Pillow:
-
-python
-Copiar
-Editar
-draw.text((x+1, y+1), text, font=font, fill="black")  # shadow
-draw.text((x, y), text, font=font, fill="white")      # main
-
-✅ E. PERFORMANCE BOOST
-1. Avoid resizing twice
-Right now you're resizing before YOLO + OCR.
-
-✅ Use original for YOLO
-
-✅ Resize only for OCR after cropping bubbles
-
-2. Multithread OCR and Translation
-OCR and translation can run in parallel per bubble:
-
-Use concurrent.futures.ThreadPoolExecutor
-
-Run extract_text_from_bubbles() and translate_batch() in parallel
-
-4. Performance & Responsiveness
-Parallelize OCR & Translation with concurrent.futures.ThreadPoolExecutor so multiple bubbles are processed truly in parallel (your GPU can batch OCR, and translation calls can fire off concurrently).
-
-Cache translations (in a dict keyed by original Japanese text) so repeated bubbles (or repeated presses) don’t re‑translate the same string.
-
-- Use ``GoogleTranslator.translate_batch`` to translate many bubbles in one request.
-- Set environment variable ``DEBUG_IMAGES=1`` to save captured/processed images; leave it unset for faster runs.
-
-5. UI Polish
-Dynamic font sizing: Measure each bubble’s width/height and pick a font size that maximizes legibility without overflow.
-
-Drop‑shadows or outlines behind text to improve contrast on noisy backgrounds.
-
-Smooth fade‑in animations for the overlay so it doesn’t “pop” abruptly.
-
-6. Translation Engine Options
-Swap out Google Translate for an offline engine (e.g. argos-translate or a local LibreTranslate server).
-
-Or try the DeepL unofficial API for higher fidelity, then fall back to Google/LibreTranslate if it’s down.
-
-7. Live‑Video Mode
-You can now toggle a simple real‑time loop by pressing the ``video`` hotkey. The
-app captures frames at the configured ``video_fps`` and processes them
-continuously. The YOLO detector stays loaded, providing near real‑time
-translations.
-
-8. Bubble‑Detector Improvements
-Fine‑tune your YOLO model on your own manga pages for better recall/precision.
-
-Or experiment with Transformer‑based detectors (e.g. DETR) if you need higher accuracy on weird layouts.
-
-## 🎯 Goals
-1. Replace all Tesseract calls with Manga-OCR.
-2. Maintain existing input/output interfaces (e.g. image paths, screenshots).
-3. Manga-OCR automatically handles vertical Japanese text.
-4. Improve performance: batch processing, GPU support, multithreading as needed.  
-5. Plug in translation step after OCR.  
-6. Structure code into clear modules:  
-   - capture.py    → screenshot / image loading  
-   - ocr.py        → text detection & recognition (Manga-OCR)
-   - translate.py  → calls translator API or local model  
-   - ui_overlay.py → draws translated text onto images / GUI  
-   - main.py       → ties it all together, CLI or hotkey trigger  
-
-## 📦 Dependencies
-```bash
-pip install manga-ocr
-pip install deep-translator        # or transformers[torch] for MarianMT
-pip install mss keyboard pillow    # screenshot + input + image handling
-pip install opencv-python          # overlay drawing
-🧩 Module: ocr.py
-Initialize:
-
-python
-Copiar
-Editar
-from manga_ocr import MangaOcr
-ocr = MangaOcr()
-Function: def extract_text(image: np.ndarray) -> List[Tuple[str, Tuple[int,int,int,int]]]:
-
-Input: BGR/GRAY image array
-
-Call ocr.ocr(image, cls=True)
-
-Flatten results to (text, (x1,y1,x2,y2)) for each line.
-
-Return list of (text, bounding box).
-
-⚙️ Module: translate.py
-Support: GoogleTranslator (deep-translator) or local MarianMT
-Select the engine via the ``translator`` field in ``config.json`` (``google``, ``marian``, ``best`` or ``choose``).
-
-Function: def translate_batch(texts: List[str]) -> List[str]:
-
-Detect source language if needed
-
-Translate in bulk to target (e.g. English)
-
-Handle API errors / rate limits gracefully.
-
-🖼 Module: ui_overlay.py
-Function: def draw_translations(image: np.ndarray, data: List[Tuple[str, str, bbox]]):
-
-For each (orig, trans, bbox), draw translucent box + text above/beside
-
-Use OpenCV’s putText, rectangle, and optional font scaling.
-
-Consider dynamic font size based on box height.
-
-📸 Module: capture.py
-Function: def grab_region(region: Tuple[int, int, int, int] = None) -> np.ndarray:
-
-Use mss or pyautogui.screenshot()
-
-Convert to OpenCV format
-
-Accept optional region or full screen.
-
-🚀 Module: main.py
-Parse CLI args (e.g. --gpu, --lang ja, --region 0,0,800,600)
-
-Optionally run in hotkey loop (keyboard.add_hotkey('ctrl+shift+L', process_screen))
-
-Workflow:
-
-img = capture.grab_region()
-
-ocr_data = ocr.extract_text(img)
-
-orig_texts, boxes = unzip(ocr_data)
-
-translations = translate.translate_batch(orig_texts)
-
-result_img = ui_overlay.draw_translations(img, zip(orig_texts, translations, boxes))
-
-cv2.imshow('Lens', result_img) or save to disk
-
-🔧 Performance & Reliability
-Batch OCR: if processing many small crops, send them to Manga-OCR in one call.
-
-Error Handling: wrap OCR & translation calls in try/except, log failures.
-
-Logging: use logging module, adjustable verbosity (--debug).
+---
 
 ## Configuration
-Edit `config.json` to customize hotkeys and other settings. Example:
+
+All settings in `config.json`:
 
 ```json
 {
@@ -198,317 +86,96 @@ Edit `config.json` to customize hotkeys and other settings. Example:
   "video_fps": 2,
   "ocr_confidence_threshold": 0.5
 }
-```
+Set "translator": "marian" for offline MarianMT.
 
-Set ``translator`` to ``marian`` to run the built-in MarianMT model offline.
-Use ``best`` to combine Google Translate and MarianMT, choosing the longer
-translation for each sentence. ``choose`` will show both translations in a
-popup on the right side so you can pick your preferred result for each bubble.
+"best" uses both Google and Marian, picks the best.
 
-Translations are cached in ``translations.db`` to avoid duplicate API calls. A
-CSV file ``historico_traducoes.csv`` logs each translation for later reference.
-If ``save_bubble_images`` is set to ``true``, cropped bubble screenshots are
-stored under ``bubble_logs/`` with a ``bubbles.csv`` index.
+"choose" lets you manually pick each translation.
 
-When ``ocr_confidence_threshold`` is greater than zero, the application logs a
-warning whenever Manga-OCR produces text below that heuristic score.
+Dev & Linting
+Install dependencies:
 
-Press the ``video`` hotkey to start or stop a real-time translation loop running
-at ``video_fps`` frames per second.
-
-Press the ``history`` hotkey to open a window listing previous translations.
-From there you can export the log as JSON or CSV and view the captured bubble
-image when available.
-
-If a translation cannot fit inside its bubble, enabling ``overflow_to_nearby``
-will draw the text alongside the bubble instead. Hover or click any translated
-bubble to view a tooltip showing both the original Japanese and the English
-translation. Set ``align_smoothing`` above zero to dampen small position changes
-between frames for a steadier overlay. ``bubble_shape`` controls whether each
-overlay uses an elliptical mask (default) or a rounded rectangle.
-
-## Development Setup
-This project uses *pre-commit* with **flake8** for linting. After cloning, run:
-
-```bash
+bash
+Copiar
+Editar
 pip install -r requirements.txt
 pre-commit install
-```
+Before commit:
 
-Before committing, check your changes:
-
-```bash
+bash
+Copiar
+Editar
 pre-commit run --files $(git diff --name-only)
-```
+Advanced AI Translation Tips
+Repository context: LLMs work better with full module context, not just isolated files.
 
-1. Provide Repository-Level Context
-Recent research clearly shows that large language models perform much better on function‑level translation than full repository translation due to dependencies, cross‑file context, and architecture complexity. Benchmarks like RepoTransBench and RustRepoTrans demonstrate that real‑world translations often fail without repository‑level knowledge—LLMs began with success rates under ~10–30 % on full repos, rising only modestly after iterative debugging 
-arXiv
-+2
-arXiv
-+2
-ResearchGate
-+2
-.
+RAG + Iterative Debugging: Use retrieval and error feedback for best translation.
 
-Suggestion: Instead of sending isolated prompts, incorporate:
+Chunk by Functionality: Translate core modules first, utilities next, integrate last.
 
-A small dependency graph.
+Automated Testing: Add unit tests to catch translation bugs.
 
-Relevant helper files/loaders.
+Few-Shot Prompting: Show example translations for LLM prompt context.
 
-Context from related modules.
+UI/UX & Translation Best Practices
+Use resource files (JSON/YAML) for UI strings.
 
-Previous translation examples as references (akin to “triple knowledge augmentation”) 
-arXiv
-.
+Support glossaries and translation memory for consistency.
 
-2. Use Retrieval-Augmented Generation (RAG) & Iterative Debugging
-Advanced tools like K-Trans and frameworks such as RepoGenReflex or RepoCoder use retrieval‑augmented generation with self‑debugging loops to significantly improve translation accuracy, especially for repository‑level tasks 
-arXiv
-+3
-arXiv
-+3
-ResearchGate
-+3
-.
+QA: Reviewer feedback, manual override, round-trip checks.
 
-How to apply this:
+Segment-based editing, in-context previews, flexible layouts.
 
-Implement a retrieval phase: fetch relevant previous translations or translator usage examples.
+pgsql
+Copiar
+Editar
 
-Use self‑debugging: let the model run initial translation, then feed back compilation/log errors to refine subsequent versions.
+---
 
-You could set up an iterative pipeline: initial translation → error checking → re‑prompt with errors + context → final translation.
+## 5. todolist.txt — *Development To-Do (Cleaned Up)*
 
-3. Break Down Translation Tasks Strategically
-Since large LLMs struggle with long codebases, you can break tasks into more granular steps:
+```markdown
+# Development To-Do List
 
-Translate core modules and test them.
+## 1. Bubble Detection (YOLO)
+- [ ] Evaluate current YOLO performance on various manga panel layouts.
+- [ ] Gather and annotate test data (especially bubble-heavy, edge cases).
+- [ ] Fine-tune YOLO for accuracy on overlapping/irregular bubbles.
 
-Translate utility and dependency modules.
+## 2. OCR Engine
+- [x] Integrate Manga-OCR (handles vertical text, furigana).
+- [ ] Evaluate Manga-OCR on complex multi-bubble layouts.
+- [x] Capture OCR confidence metrics for low-quality results.
 
-Compose integration translations last.
-
-Limit the number of lines and dependency complexity per translation chunk—as performance drops as lines and dependency counts increase 
-arXiv
-.
-
-4. Quality Metrics & Testing Harness
-Benchmark data for repository-level translation emphasizes using automated test suites, measuring pass@1 and debug‑assisted DSR@1 as indicators of success 
-arXiv
-+2
-arXiv
-+2
-ResearchGate
-+2
-.
-
-Recommendation:
-
-Add unit tests or translation validation scripts.
-
-Measure success rates automatically per translation batch.
-
-Log translation errors and model prompts/evidence to help refine future prompts.
-
-5. Example-Driven Prompting
-LLMs tend to follow patterns well when provided with prior examples. K‑Trans constructs a knowledge base using previous translations, dependency usage, and sample code to inform generation 
-github.com
-arXiv
-+1
-ResearchGate
-+1
-.
-
-You can:
-
-Build a small knowledge repository: original sentences, target translations, typical corrections.
-
-Include these as few‑shot examples in your prompt templates.
-
-✅ Quick Summary of Improvements
-Area	Approach
-Context awareness	Share dependency graph / related files with prompt
-Iterative workflow	Employ retrieval‑augmented generation + self debugging
-Task granularity	Break translations into smaller, testable chunks
-Automated validation	Add test suite, track pass@1 and DSR@1 metrics
-Example‑based prompt design	Use few‑shot examples and knowledge base references
-
-
-🔧 Best Translation APIs & Services
-1. Google Cloud Translation API
-Offers high‑quality neural machine translation with robust support for Japanese and English.
-
-Includes basic and advanced tiers for domain‑specific and formatted document translations.
-
-Easy integration into web or desktop interfaces.
-Reddit
-Thao & Company
-Google Cloud
-+1
-WIRED
-+1
-
-2. Microsoft Translator API (Azure)
-Supports both text and speech translation for 179+ languages, including Japanese ↔ English.
-
-Free tier with up to 2 million characters/month.
-
-Supports customization via Custom Translator feature.
-Wikipedia
-Thao & Company
-+1
-Wikipedia
-+1
- 
-Wikipedia
-Thao & Company
-
-3. DeepL API (via third-party or wrapper)
-Highly regarded for fluency, tone retention, and nuanced translation.
-
-Often outperforms others at translating natural-sounding Japanese.
-Reddit
-+1
-GitHub
-+1
-daily.dev
-+8
-SimpleLocalize
-+8
-Reddit
-+8
-
-4. LibreTranslate
-A free, open-source translation API (AGPLv3) that you can self-host for full control and privacy.
-
-Supports Japanese English out of the box.
-Wikipedia
-+5
-libretranslate.com
-+5
-Thao & Company
-+5
-Reddit
-+1
-Reddit
-+1
-
-5. Hybrid Toolkits like Kudasai
-Integrates multiple backend engines (OpenAI, DeepL, Google, Gemini) and selects the best result.
-Great for prototyping UI interfaces that switch between engines depending on quality.
-GitHub
-
-📱 UI Translation Interface Tools & Design Approaches
-1. Computer-Aided Translation (CAT) Tools
-Tools like OmegaT combine TM (translation memory) with machine generation.
-
-UI supports segment‑by‑segment editing, glossary lookups, fuzzy‑matching, and post‑edit capabilities.
-
-Integrates MT suggestions alongside translation memory for consistency.
-lokalise.com
-+4
-Wikipedia
-+4
-Reddit
-+4
-
-2. Translation Management Systems (TMS)
-Platforms like Lokalise or Translized (especially popular in Japan) provide full-featured UI translation pipelines.
-
-Offer translation memory, glossaries, style guide support, bulk import/export, and in-context review.
-SimpleLocalize
-+2
-SourceForge
-+2
-localizejs.com
-+2
-Wikipedia
-+2
-lokalise.com
-+2
-XTM International
-+2
-
-3. In‑Context UI Localization Tools
-Tools like Rigi or systems like SAP + XTM, used by enterprise teams.
-
-Allow translators to see visual previews (screenshots) and annotate translations in context.
-Reduces errors and improves UI adherence.
-lingoport.com
-+4
-XTM International
-+4
-atltranslate.com
-+4
-
-🧠 Best Practices for Translation UI Design
-According to localization experts, here’s how to build an effective translation interface:
-
-Externalize strings into resource files (e.g. XLIFF, JSON, YAML).
-
-Implement locale-specific placeholders, formatting, and date/number handling.
-
-Design flexible layouts that handle Japanese text expansion.
-
-Maintain glossaries and style guides to enforce consistent terminology.
-
-Use translation memory (TM) to avoid redoing repeated segments.
-
-Use feedback loops: visual QA, native speaker review, issue tracking.
-lokalise.com
-+1
-Wikipedia
-+1
-ekitaisolutions.com
-lokalise.com
-+2
-Reddit
-+2
-Wikipedia
-+2
-
-🧩 Suggested Architecture for Your UI Component
-Component	Description
-Backend API	Choose one or combine: Google Translate / Microsoft Translator / DeepL / LibreTranslate / Kudasai.
-Translation Memory	Store each approved translation; support fuzzy matches.
-Glossary & Style Guide	A curated list of terms (e.g. 「保留」 for “pending”), tone rules.
-UI Features	Segment-based editor, editable MT suggestion, accept/apply final result.
-In-context Preview	Show UI mockups/screenshots with translated strings.
-Quality Assurance	Allow visual feedback, round-trip consistency checks, native validation.
-
-✅ Putting It All Together: What You Can Do Next
-Decide on a backend translation engine:
-
-Fast & easy: Google or Microsoft
-
-Highest fluency: DeepL (or via Hybrid tools like Kudasai)
-
-Fully offline/self-hosted: LibreTranslate
-
-Integrate CAT or TMS capabilities:
-
-If full TMS isn't needed, embed OmegaT-like segment editor into your UI.
-
-Otherwise, consider an embedded portion of systems like Translized.
-
-Design UI thoughtfully:
-
-Use external resource files.
-
-Display editable machine‑suggested translations.
-
-Support glossaries and translation memory insertion.
-
-Add QA loops:
-
-Collect reviewer feedback in UI previews.
-
-Show fuzzy-match suggestions and previous translations.
-
-Allow manual overrides and track corrections.
-
-Plan continuous localization:
-
-Surround your repo-level translation system (AutoTranslationJPEN) with UI interfaces that support in-context editing and final export back to resource files or code.
+## 3. Translation Engine
+- [ ] Benchmark DeepL, Google, and others for speed/quality.
+- [ ] Build fallback translation paths.
+- [ ] Experiment with context-aware LLM translation.
+
+## 4. Live Capture & Overlay
+- [ ] Set up live capture (OpenCV/FFmpeg).
+- [ ] Overlay renderer: resize dynamically, match style, add outlines.
+- [x] Toggle overlay style (in-place or nearby).
+
+## 5. Logging & History
+- [x] Log each translation (original, translated, timestamp, screenshot).
+- [x] Build UI for browsing and exporting history.
+
+## 6. UX Tuning & Edge Cases
+- [x] Detect overflow, auto-resize or switch overlay.
+- [x] Hover/click fallback to show both original + translation.
+- [x] Keep alignments steady as bubbles move or scale.
+
+## 7. Testing & Validation
+- [ ] Assemble test suite (diverse pages/fonts/styles).
+- [ ] Measure detection/OCR/translation/overlay accuracy.
+- [ ] Iterate and improve on weak points.
+
+## 8. Performance Optimization
+- [ ] Profile latency end-to-end.
+- [ ] Implement batching or frame-skip if needed.
+
+## 9. Documentation & Future Steps
+- [ ] Write quickstart/usage guide.
+- [ ] Plan multimodal LLM translation integration.
+- [ ] Open-source, gather community feedback.

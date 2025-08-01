@@ -1,63 +1,41 @@
+## 2. BRAINSTORMING.md — *Project Brainstorming (Refined)*
+
+```markdown
 # Project Brainstorming
 
 ## Vision
-- Provide a local "Google Lens" for manga translation
-- Run entirely on the user's PC without cloud services
+- Deliver a **local, offline "Google Lens"** for manga translation.
+- Ensure all processing is done **entirely on the user's PC** (no cloud).
 
 ## Core Components
-- **Capture**: grab screen regions or load images
-- **Bubble Detection**: use YOLO to isolate speech bubbles
-- **OCR**: use Manga-OCR for Japanese text
-- **Translation**: integrate offline translation models or libraries
-- **Overlay**: draw translated text on the original image
+- **Capture:** Grab screen regions or load images for analysis.
+- **Bubble Detection:** Use a YOLO model to locate manga speech bubbles.
+- **OCR:** Extract Japanese text with Manga-OCR.
+- **Translation:** Integrate offline models (e.g., MarianMT, Argos) or optional online APIs.
+- **Overlay:** Draw translated text directly onto the original manga image.
 
 ## Short-Term Goals
-- Polish the existing pipeline for speed and stability
-- Add a simple UI overlay with adjustable fonts and shadows
-- Cache translations to avoid repeat requests
+- Improve pipeline speed and stability.
+- Add a simple, configurable UI overlay (adjustable fonts, drop-shadows).
+- Implement translation caching to skip repeated work.
 
 ## Long-Term Ideas
-- Train custom models for manga fonts and bubble shapes
-- Provide real-time video mode at low FPS
-- Allow user corrections to improve translations over time
+- Fine-tune models for manga-specific bubble shapes and fonts.
+- Enable a low-FPS real-time video mode.
+- Allow users to correct translations and build a feedback-improved model.
 
-## Pain Points
-- Detection struggles with tiny or irregular bubbles.
-  Existing YOLO training mostly covers standard ovals, so overlaps
-  and odd shapes often get missed or cut off.
-- OCR can be slow and fails on highly stylized fonts.
-  Decorative letterforms reduce accuracy and the GPU remains idle,
-  making recognition slower than necessary.
-- Translation quality varies and currently depends on online APIs.
-  Network latency delays results and inconsistent phrasing appears
-  between providers.
-- Overlay text sometimes flickers or misaligns.
-  Bounding boxes shift slightly frame to frame, causing jitter and
-  occasional overflow.
-- Hotkeys are hard-coded and not customizable.
-  Users cannot remap shortcuts, which leads to conflicts with other
-  applications.
-- No persistent history of past translations.
-  Without logging, duplicate bubbles trigger repeated work and there
-  is no searchable reference.
+## Current Pain Points
+- **Bubble Detection:** Fails on small, irregular, or overlapping shapes.
+- **OCR:** Slow on complex fonts; struggles with decorative text.
+- **Translation:** Quality and phrasing vary, especially with online APIs due to latency.
+- **Overlay:** Sometimes flickers or is misaligned.
+- **Hotkeys:** Currently hardcoded, not user-configurable.
+- **No History:** Past translations are not searchable or logged.
 
 ## Potential Improvements
-- Fine-tune the bubble detector with more manga samples.
-  Create a diverse dataset with small, irregular, and overlapping
-  bubbles to boost recall.
-- Batch OCR calls and use GPU acceleration where available.
-  Send multiple crops to Manga-OCR at once to utilize the GPU
-  and cut response time.
-- Integrate an offline translator such as Argos or MarianMT.
-  Running locally avoids API limits and keeps translations
-  available offline.
-- Add a config file for hotkeys and font settings.
-  Provide a YAML or JSON file so users can tweak shortcuts
-  and overlay colors.
-- Cache results and build a searchable translation log.
-  Store recognized text in a SQLite database for quick lookup
-  and to avoid repeated work.
-- Explore a Qt-based overlay for smoother updates.
-  Qt's graphics pipeline could reduce flicker and support
-  animations compared to raw OpenCV windows.
-
+- Train YOLO on diverse manga samples (small, irregular, overlapping bubbles).
+- Batch OCR and leverage GPU acceleration.
+- Add/enable offline translators (Argos, MarianMT) to remove API limits.
+- Allow users to configure hotkeys, fonts, and overlay colors in a config file.
+- Cache and log all translations (e.g., SQLite, CSV).
+- Explore using Qt for smoother overlay rendering and animation.

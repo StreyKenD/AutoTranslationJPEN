@@ -50,7 +50,6 @@ def set_engine(engine: str) -> None:
         engine = "google"
     TRANSLATOR = engine
 
-
 def _lookup_cache(text: str) -> str | None:
     """Return cached translation if available."""
     cur = _conn.execute("SELECT translated FROM cache WHERE source=?", (text,))

@@ -3,7 +3,7 @@
 from deep_translator import (
     GoogleTranslator,
     DeeplTranslator,
-    LibreTranslateTranslator,
+    LibreTranslator,
 )
 from typing import List
 
@@ -158,7 +158,7 @@ def _translate_engine(engine: str, texts: List[str]) -> List[str]:
             translator = DeeplTranslator(source="JA", target="EN")
             return translator.translate_batch(texts)
         if engine == "libre":
-            translator = LibreTranslateTranslator(source="ja", target="en")
+            translator = LibreTranslator(source="ja", target="en")
             return translator.translate_batch(texts)
         if engine == "marian" and _model and _tokenizer:
             inputs = _tokenizer(texts, return_tensors="pt", padding=True)

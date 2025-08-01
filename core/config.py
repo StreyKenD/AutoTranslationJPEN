@@ -20,6 +20,7 @@ DEFAULT_CONFIG = {
     "overflow_to_nearby": False,
     "tooltip_overlay": True,
     "align_smoothing": 0.5,
+    "bubble_shape": "ellipse",
     "translator": "google",
     "video_fps": 2,
     "ocr_confidence_threshold": 0.5

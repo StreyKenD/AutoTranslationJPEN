@@ -1,4 +1,4 @@
-# ui/drawer.py (refactored with dynamic font and real blurred background)
+"""Overlay drawing helpers."""
 import textwrap
 import logging
 import tkinter as tk
@@ -26,6 +26,7 @@ def draw_translated_bubbles(
     replace_mode: bool = False,
     overflow_to_nearby: bool = False,
     show_tooltip: bool = True,
+    bubble_shape: str = "ellipse",
     prev_coords: dict | None = None,
     smoothing: float = 0.0,
     coord_out: dict | None = None,
@@ -51,6 +52,8 @@ def draw_translated_bubbles(
         When ``True``, draw text beside the bubble if it cannot fit inside.
     show_tooltip : bool, optional
         Display the original + translated text on hover.
+    bubble_shape : str, optional
+        Either ``"ellipse"`` or ``"rect"`` to control overlay geometry.
     prev_coords : dict, optional
         Previous coordinates keyed by translation for alignment smoothing.
     smoothing : float, optional
@@ -115,13 +118,20 @@ def draw_translated_bubbles(
             # 2. Prepare overlay image and draw semi-transparent background
             img = Image.new("RGBA", (w, h))
 
+            mask = Image.new("L", (w, h), 0)
+            mask_draw = ImageDraw.Draw(mask)
             shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
             shadow_draw = ImageDraw.Draw(shadow)
-            shadow_draw.rounded_rectangle([(0, 0), (w, h)], radius=CORNER_RADIUS, fill=(0, 0, 0, 120))
+            if bubble_shape == "ellipse":
+                mask_draw.ellipse([(0, 0), (w, h)], fill=255)
+                shadow_draw.ellipse([(0, 0), (w, h)], fill=(0, 0, 0, 120))
+            else:
+                mask_draw.rounded_rectangle([(0, 0), (w, h)], radius=CORNER_RADIUS, fill=255)
+                shadow_draw.rounded_rectangle([(0, 0), (w, h)], radius=CORNER_RADIUS, fill=(0, 0, 0, 120))
             shadow_blurred = shadow.filter(ImageFilter.GaussianBlur(6))
             img.paste(shadow_blurred, (0, 0), shadow_blurred)
 
-            img.paste(bg, (0, 0))
+            img.paste(bg, (0, 0), mask)
             draw = ImageDraw.Draw(img, "RGBA")
 
             # 3. Determine dynamic font size
@@ -148,9 +158,18 @@ def draw_translated_bubbles(
                     line_height = 16 + LINE_SPACING
 
                 total_text_height = len(lines) * line_height
+                width_overflow = False
+                for ln in lines:
+                    try:
+                        tw = font.getbbox(ln)[2]
+                    except AttributeError:
+                        tw = draw.textlength(ln, font=font)
+                    if tw > w - 10:
+                        width_overflow = True
+                        break
 
-                if total_text_height <= h - 10 or font_size <= MIN_FONT_SIZE:
-                    overflow = total_text_height > h - 10
+                if (total_text_height <= h - 10 and not width_overflow) or font_size <= MIN_FONT_SIZE:
+                    overflow = total_text_height > h - 10 or width_overflow
                     break
                 font_size -= 1
 

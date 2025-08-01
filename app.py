@@ -144,6 +144,8 @@ def main():
     overflow_to_nearby = bool(cfg.get("overflow_to_nearby", False))
     tooltip_overlay = bool(cfg.get("tooltip_overlay", True))
     align_smoothing = float(cfg.get("align_smoothing", 0.5))
+    bubble_shape = cfg.get("bubble_shape", "ellipse")
+
     set_engine(cfg.get("translator", "google"))
     fps = int(cfg.get("video_fps", 2))
     conf_threshold = float(cfg.get("ocr_confidence_threshold", 0.5))
@@ -225,6 +227,7 @@ def main():
                 prev_coords=last_coords,
                 smoothing=align_smoothing,
                 coord_out=coords,
+                bubble_shape=bubble_shape,
             )
             bubble_items.extend(bubble_items)
             last_coords = coords

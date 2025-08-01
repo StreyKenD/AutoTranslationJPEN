@@ -193,6 +193,7 @@ Edit `config.json` to customize hotkeys and other settings. Example:
   "overflow_to_nearby": false,
   "tooltip_overlay": true,
   "align_smoothing": 0.5,
+  "bubble_shape": "ellipse",
   "translator": "google",
   "video_fps": 2,
   "ocr_confidence_threshold": 0.5
@@ -220,7 +221,8 @@ If a translation cannot fit inside its bubble, enabling ``overflow_to_nearby``
 will draw the text alongside the bubble instead. Hover or click any translated
 bubble to view a tooltip showing both the original Japanese and the English
 translation. Set ``align_smoothing`` above zero to dampen small position changes
-between frames for a steadier overlay.
+between frames for a steadier overlay. ``bubble_shape`` controls whether each
+overlay uses an elliptical mask (default) or a rounded rectangle.
 
 ## Development Setup
 This project uses *pre-commit* with **flake8** for linting. After cloning, run:

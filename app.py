@@ -160,7 +160,7 @@ def main():
     last_coords = {}
 
     def toggle_bubbles():
-        nonlocal bubbles_visible, bubble_items
+        nonlocal bubbles_visible
         bubbles_visible = not bubbles_visible
         # remove drawn items
         for item in bubble_items:
@@ -169,7 +169,7 @@ def main():
         logger.info("Bubbles %s", "shown" if bubbles_visible else "hidden")
 
     def run_ocr_cycle():
-        nonlocal bubble_items, bubbles_visible, last_coords
+        nonlocal last_coords
         logger.info("Starting OCR cycle")
 
         destroy_status_overlay()
@@ -202,20 +202,13 @@ def main():
             conf_threshold=conf_threshold,
         )
 
-        # Debug: draw border rectangles in blue
-        for text, (x1, y1, x2, y2), conf, angle in blocks:
-            x_screen = x1
-            y_screen = y1
-            w, h = x2 - x1, y2 - y1
-            # draw debug outline relative to canvas
-            rect = canvas.create_rectangle(x_screen, y_screen, x_screen + w, y_screen + h,
-                                           outline='blue', width=2)
-            bubble_items.append(rect)
+        # Previously we drew each detected bubble with a blue rectangle for
+        # debugging. Remove these outlines to keep the overlay clean.
 
         # draw translated bubbles if visible
         if bubbles_visible and blocks and translations:
             coords = {}
-            bubble_items = draw_translated_bubbles(
+            new_items = draw_translated_bubbles(
                 canvas,
                 region_img,
                 blocks,
@@ -229,7 +222,7 @@ def main():
                 coord_out=coords,
                 bubble_shape=bubble_shape,
             )
-            bubble_items.extend(bubble_items)
+            bubble_items.extend(new_items)
             last_coords = coords
 
         logger.info("Overlay updated")

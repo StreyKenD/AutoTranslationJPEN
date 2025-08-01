@@ -35,11 +35,32 @@ _model = None
 _tokenizer = None
 
 
+def _prompt_choice(source: str, g_trans: str, m_trans: str) -> str:
+    """Ask the user to pick between two translations."""
+    import tkinter as tk
+    from tkinter import simpledialog
+
+    root = tk.Tk()
+    root.withdraw()
+    prompt = (
+        f"{source}\n\n1) {g_trans}\n2) {m_trans}\n"
+        "Enter 1 or 2 to select the better translation:"
+    )
+    choice = simpledialog.askstring("Choose translation", prompt)
+    root.destroy()
+    return m_trans if choice == "2" else g_trans
+
+
 def set_engine(engine: str) -> None:
-    """Select translation engine (``google`` or ``marian``)."""
+    """Select translation engine.
+
+    Supported values are ``google``, ``marian``, ``best`` and ``choose``.
+    ``best`` runs both engines and picks the longest result for each sentence.
+    ``choose`` shows both results in a popup so the user can pick one.
+    """
     global TRANSLATOR, _model, _tokenizer
     engine = engine.lower()
-    if engine == "marian" and MarianMTModel and MarianTokenizer:
+    if engine in {"marian", "best", "choose"} and MarianMTModel and MarianTokenizer:
         if _model is None or _tokenizer is None:
             try:
                 _tokenizer = MarianTokenizer.from_pretrained(
@@ -50,12 +71,12 @@ def set_engine(engine: str) -> None:
                 )
             except Exception as e:  # pragma: no cover
                 logging.error("Failed to load MarianMT model: %s", e)
-                engine = "google"
-    elif engine != "google":
+                if engine == "marian":
+                    engine = "google"
+    elif engine not in {"google", "best", "choose"}:
         logging.warning("Unknown translator '%s', falling back to Google", engine)
         engine = "google"
     TRANSLATOR = engine
-
 
 
 def _lookup_cache(text: str) -> str | None:
@@ -119,6 +140,58 @@ def translate_batch(texts: List[str]) -> List[str]:
             except Exception as e:
                 logging.error("MarianMT error: %s", e)
                 translated = ["" for _ in to_translate]
+        elif TRANSLATOR == "best":
+            # Run both engines and pick the longest result
+            try:
+                translator = GoogleTranslator(source="ja", target="en")
+                google_trans = translator.translate_batch(to_translate)
+            except Exception as e:
+                logging.error("Google Translate batch error: %s", e)
+                google_trans = ["" for _ in to_translate]
+
+            if _model and _tokenizer:
+                try:
+                    inputs = _tokenizer(to_translate, return_tensors="pt", padding=True)
+                    with torch.no_grad():
+                        outputs = _model.generate(**inputs)
+                    marian_trans = _tokenizer.batch_decode(outputs, skip_special_tokens=True)
+                except Exception as e:
+                    logging.error("MarianMT error: %s", e)
+                    marian_trans = ["" for _ in to_translate]
+            else:
+                marian_trans = ["" for _ in to_translate]
+
+            translated = []
+            for g, m in zip(google_trans, marian_trans):
+                choice = m if len(m) >= len(g) and m else g
+                translated.append(choice)
+        elif TRANSLATOR == "choose":
+            # Show both translations and allow the user to pick
+            try:
+                translator = GoogleTranslator(source="ja", target="en")
+                google_trans = translator.translate_batch(to_translate)
+            except Exception as e:
+                logging.error("Google Translate batch error: %s", e)
+                google_trans = ["" for _ in to_translate]
+
+            if _model and _tokenizer:
+                try:
+                    inputs = _tokenizer(to_translate, return_tensors="pt", padding=True)
+                    with torch.no_grad():
+                        outputs = _model.generate(**inputs)
+                    marian_trans = _tokenizer.batch_decode(outputs, skip_special_tokens=True)
+                except Exception as e:
+                    logging.error("MarianMT error: %s", e)
+                    marian_trans = ["" for _ in to_translate]
+            else:
+                marian_trans = ["" for _ in to_translate]
+
+            translated = []
+            for src, g, m in zip(to_translate, google_trans, marian_trans):
+                if g == m or not m:
+                    translated.append(g)
+                else:
+                    translated.append(_prompt_choice(src, g, m))
         else:
             try:
                 translator = GoogleTranslator(source="ja", target="en")

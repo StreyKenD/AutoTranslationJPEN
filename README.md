@@ -203,7 +203,7 @@ Edit `config.json` to customize hotkeys and other settings. Example:
 Set ``translator`` to ``marian`` to run the built-in MarianMT model offline.
 Use ``best`` to combine Google Translate and MarianMT, choosing the longer
 translation for each sentence. ``choose`` will show both translations in a
-popup so you can pick your preferred result for each bubble.
+popup on the right side so you can pick your preferred result for each bubble.
 
 Translations are cached in ``translations.db`` to avoid duplicate API calls. A
 CSV file ``historico_traducoes.csv`` logs each translation for later reference.

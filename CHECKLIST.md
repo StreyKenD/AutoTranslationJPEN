@@ -92,7 +92,7 @@ Add smooth transitions/fades, animated positioning for overlays.
 
 Overlay Customization:
 
-Provide options for font, size, color, outline, and background style per user.
+Provide options for font, size, color, outline, and background style per user. **Implemented**
 
 User can toggle outline, drop shadow, and bubble mask.
 

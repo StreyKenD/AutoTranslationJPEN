@@ -21,6 +21,10 @@ DEFAULT_CONFIG = {
     "tooltip_overlay": True,
     "align_smoothing": 0.5,
     "bubble_shape": "ellipse",
+    "overlay_font": "fonts/animeace2_reg.ttf",
+    "overlay_text_color": "#ffffff",
+    "overlay_outline_color": "#000000",
+    "overlay_bg_alpha": 180,
     "translator": "google",
     "video_fps": 2,
     "ocr_confidence_threshold": 0.5

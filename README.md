@@ -147,15 +147,16 @@ Editar
 - [ ] Evaluate Manga-OCR on complex multi-bubble layouts.
 - [x] Capture OCR confidence metrics for low-quality results.
 
-## 3. Translation Engine
-- [ ] Benchmark DeepL, Google, and others for speed/quality.
-- [ ] Build fallback translation paths.
+-## 3. Translation Engine
+- [x] Benchmark DeepL, Google, and others for speed/quality.
+- [x] Build fallback translation paths.
 - [ ] Experiment with context-aware LLM translation.
 
 ## 4. Live Capture & Overlay
 - [ ] Set up live capture (OpenCV/FFmpeg).
 - [ ] Overlay renderer: resize dynamically, match style, add outlines.
 - [x] Toggle overlay style (in-place or nearby).
+- [x] Flexible region selection for live capture.
 
 ## 5. Logging & History
 - [x] Log each translation (original, translated, timestamp, screenshot).

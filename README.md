@@ -240,3 +240,98 @@ Before committing, check your changes:
 ```bash
 pre-commit run --files $(git diff --name-only)
 ```
+
+1. Provide Repository-Level Context
+Recent research clearly shows that large language models perform much better on function‑level translation than full repository translation due to dependencies, cross‑file context, and architecture complexity. Benchmarks like RepoTransBench and RustRepoTrans demonstrate that real‑world translations often fail without repository‑level knowledge—LLMs began with success rates under ~10–30 % on full repos, rising only modestly after iterative debugging 
+arXiv
++2
+arXiv
++2
+ResearchGate
++2
+.
+
+Suggestion: Instead of sending isolated prompts, incorporate:
+
+A small dependency graph.
+
+Relevant helper files/loaders.
+
+Context from related modules.
+
+Previous translation examples as references (akin to “triple knowledge augmentation”) 
+arXiv
+.
+
+2. Use Retrieval-Augmented Generation (RAG) & Iterative Debugging
+Advanced tools like K-Trans and frameworks such as RepoGenReflex or RepoCoder use retrieval‑augmented generation with self‑debugging loops to significantly improve translation accuracy, especially for repository‑level tasks 
+arXiv
++3
+arXiv
++3
+ResearchGate
++3
+.
+
+How to apply this:
+
+Implement a retrieval phase: fetch relevant previous translations or translator usage examples.
+
+Use self‑debugging: let the model run initial translation, then feed back compilation/log errors to refine subsequent versions.
+
+You could set up an iterative pipeline: initial translation → error checking → re‑prompt with errors + context → final translation.
+
+3. Break Down Translation Tasks Strategically
+Since large LLMs struggle with long codebases, you can break tasks into more granular steps:
+
+Translate core modules and test them.
+
+Translate utility and dependency modules.
+
+Compose integration translations last.
+
+Limit the number of lines and dependency complexity per translation chunk—as performance drops as lines and dependency counts increase 
+arXiv
+.
+
+4. Quality Metrics & Testing Harness
+Benchmark data for repository-level translation emphasizes using automated test suites, measuring pass@1 and debug‑assisted DSR@1 as indicators of success 
+arXiv
++2
+arXiv
++2
+ResearchGate
++2
+.
+
+Recommendation:
+
+Add unit tests or translation validation scripts.
+
+Measure success rates automatically per translation batch.
+
+Log translation errors and model prompts/evidence to help refine future prompts.
+
+5. Example-Driven Prompting
+LLMs tend to follow patterns well when provided with prior examples. K‑Trans constructs a knowledge base using previous translations, dependency usage, and sample code to inform generation 
+github.com
+arXiv
++1
+ResearchGate
++1
+.
+
+You can:
+
+Build a small knowledge repository: original sentences, target translations, typical corrections.
+
+Include these as few‑shot examples in your prompt templates.
+
+✅ Quick Summary of Improvements
+Area	Approach
+Context awareness	Share dependency graph / related files with prompt
+Iterative workflow	Employ retrieval‑augmented generation + self debugging
+Task granularity	Break translations into smaller, testable chunks
+Automated validation	Add test suite, track pass@1 and DSR@1 metrics
+Example‑based prompt design	Use few‑shot examples and knowledge base references
+

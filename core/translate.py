@@ -36,19 +36,47 @@ _tokenizer = None
 
 
 def _prompt_choice(source: str, g_trans: str, m_trans: str) -> str:
-    """Ask the user to pick between two translations."""
+    """Display a small menu on the right side so the user can pick a translation."""
     import tkinter as tk
-    from tkinter import simpledialog
 
     root = tk.Tk()
     root.withdraw()
-    prompt = (
-        f"{source}\n\n1) {g_trans}\n2) {m_trans}\n"
-        "Enter 1 or 2 to select the better translation:"
+
+    top = tk.Toplevel(root)
+    top.title("Choose translation")
+    top.attributes("-topmost", True)
+
+    width = 320
+    top.geometry(f"{width}x200+{top.winfo_screenwidth()-width-10}+50")
+
+    tk.Label(top, text=source, wraplength=width-20, justify="left").pack(
+        padx=10, pady=5, anchor="w"
     )
-    choice = simpledialog.askstring("Choose translation", prompt)
-    root.destroy()
-    return m_trans if choice == "2" else g_trans
+
+    result = {"val": g_trans}
+
+    def _set(text: str) -> None:
+        result["val"] = text
+        top.destroy()
+        root.destroy()
+
+    tk.Button(
+        top,
+        text=g_trans,
+        wraplength=width-20,
+        justify="left",
+        command=lambda: _set(g_trans),
+    ).pack(fill="both", padx=10, pady=5)
+    tk.Button(
+        top,
+        text=m_trans,
+        wraplength=width-20,
+        justify="left",
+        command=lambda: _set(m_trans),
+    ).pack(fill="both", padx=10, pady=5)
+
+    top.mainloop()
+    return result["val"]
 
 
 def set_engine(engine: str) -> None:

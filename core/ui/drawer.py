@@ -3,8 +3,12 @@ import textwrap
 import logging
 import tkinter as tk
 from PIL import (
-    Image, ImageDraw, ImageFont,
-    ImageTk, ImageFilter,
+    Image,
+    ImageDraw,
+    ImageFont,
+    ImageTk,
+    ImageFilter,
+    ImageColor,
 )
 
 # Settings (can be moved to config.py later)
@@ -14,6 +18,8 @@ BLUR_RADIUS   = 5             # radius for background blur
 LINE_SPACING  = 4             # spacing between lines
 BG_ALPHA      = 180           # alpha for white overlay (0-255)
 CORNER_RADIUS = 10            # corner radius for overlay box
+TEXT_COLOR    = (255, 255, 255, 255)
+OUTLINE_COLOR = (0, 0, 0, 255)
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +36,10 @@ def draw_translated_bubbles(
     prev_coords: dict | None = None,
     smoothing: float = 0.0,
     coord_out: dict | None = None,
+    font_path: str = FONT_PATH,
+    text_color: str | tuple = TEXT_COLOR,
+    outline_color: str | tuple = OUTLINE_COLOR,
+    bg_alpha: int = BG_ALPHA,
 ):
     """Draw translated bubbles on the canvas with optional UX helpers.
 
@@ -60,6 +70,14 @@ def draw_translated_bubbles(
         Blend factor for position smoothing ``0``-``1``.
     coord_out : dict, optional
         Dictionary populated with the final coordinates for each translation.
+    font_path : str, optional
+        Path to a TTF font used for the translated text.
+    text_color : str or tuple, optional
+        Fill color for the translated text.
+    outline_color : str or tuple, optional
+        Outline color around the text for readability.
+    bg_alpha : int, optional
+        Alpha value for the bubble background (0-255).
     """
     canvas_items = []
     if not hasattr(canvas, "images"):
@@ -92,6 +110,13 @@ def draw_translated_bubbles(
             tooltip_win = None
 
     hide_tip()
+    if isinstance(text_color, str):
+        tc = ImageColor.getrgb(text_color)
+        text_color = (*tc, 255)
+    if isinstance(outline_color, str):
+        oc = ImageColor.getrgb(outline_color)
+        outline_color = (*oc, 255)
+
     for (orig, (x1, y1, x2, y2), conf, angle), translated in zip(blocks, translations):
         try:
             w, h = x2 - x1, y2 - y1
@@ -107,12 +132,12 @@ def draw_translated_bubbles(
 
             patch = region_img.crop((x1_rel, y1_rel, x2_rel, y2_rel))
             if replace_mode:
-                bg = Image.new("RGBA", patch.size, (255, 255, 255, BG_ALPHA))
+                bg = Image.new("RGBA", patch.size, (255, 255, 255, bg_alpha))
             else:
                 bg = patch.filter(ImageFilter.GaussianBlur(BLUR_RADIUS))
                 overlay = Image.new("RGBA", bg.size, (0, 0, 0, 80))
                 bg = Image.alpha_composite(bg.convert("RGBA"), overlay)
-                white_wash = Image.new("RGBA", bg.size, (255, 255, 255, BG_ALPHA))
+                white_wash = Image.new("RGBA", bg.size, (255, 255, 255, bg_alpha))
                 bg = Image.alpha_composite(bg, white_wash)
 
             # 2. Prepare overlay image and draw semi-transparent background
@@ -143,9 +168,9 @@ def draw_translated_bubbles(
             overflow = False
             while True:
                 try:
-                    font = ImageFont.truetype(FONT_PATH, font_size)
+                    font = ImageFont.truetype(font_path, font_size)
                 except IOError:
-                    logger.warning(f"Failed to load font at {FONT_PATH}, using default.")
+                    logger.warning("Failed to load font at %s, using default.", font_path)
                     font = ImageFont.load_default()
 
                 max_chars = max(10, w // (font_size * 2 // 3))
@@ -200,17 +225,17 @@ def draw_translated_bubbles(
                     for dy in (-1, 0, 1):
                         if dx or dy:
                             draw.text(
-                                (x_text+dx, y_text+dy),
+                                (x_text + dx, y_text + dy),
                                 line,
                                 font=font,
-                                fill=(0, 0, 0, 255)
+                                fill=outline_color,
                             )
                 # main text
                 draw.text(
                     (x_text, y_text),
                     line,
                     font=font,
-                    fill=(255, 255, 255, 255)
+                    fill=text_color,
                 )
 
             # 7. Convert to PhotoImage and draw on canvas

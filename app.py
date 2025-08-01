@@ -163,6 +163,10 @@ def main():
     tooltip_overlay = bool(cfg.get("tooltip_overlay", True))
     align_smoothing = float(cfg.get("align_smoothing", 0.5))
     bubble_shape = cfg.get("bubble_shape", "ellipse")
+    font_path = cfg.get("overlay_font", "fonts/animeace2_reg.ttf")
+    text_color = cfg.get("overlay_text_color", "#ffffff")
+    outline_color = cfg.get("overlay_outline_color", "#000000")
+    bg_alpha = int(cfg.get("overlay_bg_alpha", 180))
 
     set_engine(cfg.get("translator", "google"))
     fps = int(cfg.get("video_fps", 2))
@@ -285,6 +289,10 @@ def main():
                 smoothing=align_smoothing,
                 coord_out=coords,
                 bubble_shape=bubble_shape,
+                font_path=font_path,
+                text_color=text_color,
+                outline_color=outline_color,
+                bg_alpha=bg_alpha,
             )
             bubble_items.extend(new_items)
             last_coords = coords

@@ -82,10 +82,21 @@ All settings in `config.json`:
   "tooltip_overlay": true,
   "align_smoothing": 0.5,
   "bubble_shape": "ellipse",
+  "overlay_font": "fonts/animeace2_reg.ttf",
+  "overlay_text_color": "#ffffff",
+  "overlay_outline_color": "#000000",
+  "overlay_bg_alpha": 180,
   "translator": "google",
   "video_fps": 2,
   "ocr_confidence_threshold": 0.5
 }
+```
+Customize overlay style with these options:
+- `overlay_font` – path to a TTF font for translated text
+- `overlay_text_color` – hex color for text (e.g. `"#ffffff"`)
+- `overlay_outline_color` – hex color for the text outline
+- `overlay_bg_alpha` – background opacity from 0-255
+
 Set "translator": "marian" for offline MarianMT.
 
 "best" uses both Google and Marian, picks the best.

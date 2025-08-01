@@ -82,10 +82,21 @@ All settings in `config.json`:
   "tooltip_overlay": true,
   "align_smoothing": 0.5,
   "bubble_shape": "ellipse",
+  "overlay_font": "fonts/animeace2_reg.ttf",
+  "overlay_text_color": "#ffffff",
+  "overlay_outline_color": "#000000",
+  "overlay_bg_alpha": 180,
   "translator": "google",
   "video_fps": 2,
   "ocr_confidence_threshold": 0.5
 }
+```
+Customize overlay style with these options:
+- `overlay_font` – path to a TTF font for translated text
+- `overlay_text_color` – hex color for text (e.g. `"#ffffff"`)
+- `overlay_outline_color` – hex color for the text outline
+- `overlay_bg_alpha` – background opacity from 0-255
+
 Set "translator": "marian" for offline MarianMT.
 
 "best" uses both Google and Marian, picks the best.
@@ -147,15 +158,16 @@ Editar
 - [ ] Evaluate Manga-OCR on complex multi-bubble layouts.
 - [x] Capture OCR confidence metrics for low-quality results.
 
-## 3. Translation Engine
-- [ ] Benchmark DeepL, Google, and others for speed/quality.
-- [ ] Build fallback translation paths.
+-## 3. Translation Engine
+- [x] Benchmark DeepL, Google, and others for speed/quality.
+- [x] Build fallback translation paths.
 - [ ] Experiment with context-aware LLM translation.
 
 ## 4. Live Capture & Overlay
 - [ ] Set up live capture (OpenCV/FFmpeg).
 - [ ] Overlay renderer: resize dynamically, match style, add outlines.
 - [x] Toggle overlay style (in-place or nearby).
+- [x] Flexible region selection for live capture.
 
 ## 5. Logging & History
 - [x] Log each translation (original, translated, timestamp, screenshot).

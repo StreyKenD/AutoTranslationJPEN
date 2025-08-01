@@ -67,6 +67,22 @@ def build_overlay_canvas(root, region):
     return canvas
 
 
+def update_overlay_region(canvas, region):
+    """Resize and reposition the overlay canvas."""
+    win = canvas.master
+    win.geometry(f"{region['width']}x{region['height']}+{region['left']}+{region['top']}")
+    canvas.config(width=region['width'], height=region['height'])
+    canvas.delete('all')
+    canvas.create_rectangle(
+        0,
+        0,
+        region['width'] - 1,
+        region['height'] - 1,
+        outline='red',
+        width=4,
+    )
+
+
 def show_history_popup(root) -> None:
     """Display translation history with export options."""
     win = tk.Toplevel(root)
@@ -134,6 +150,8 @@ def show_history_popup(root) -> None:
     tk.Button(btn_frame, text="Export JSON", command=export_json).pack(side="left")
     tk.Button(btn_frame, text="Export CSV", command=export_csv).pack(side="left")
 
+    show_status_overlay(root, REGION, "History opened", auto_destroy_ms=1000)
+
 
 def main():
     cfg = load_config()
@@ -145,6 +163,10 @@ def main():
     tooltip_overlay = bool(cfg.get("tooltip_overlay", True))
     align_smoothing = float(cfg.get("align_smoothing", 0.5))
     bubble_shape = cfg.get("bubble_shape", "ellipse")
+    font_path = cfg.get("overlay_font", "fonts/animeace2_reg.ttf")
+    text_color = cfg.get("overlay_text_color", "#ffffff")
+    outline_color = cfg.get("overlay_outline_color", "#000000")
+    bg_alpha = int(cfg.get("overlay_bg_alpha", 180))
 
     set_engine(cfg.get("translator", "google"))
     fps = int(cfg.get("video_fps", 2))
@@ -159,7 +181,51 @@ def main():
     loop_id = None
     last_coords = {}
 
+    def select_capture_region():
+        """Let the user drag a rectangle to set the capture region."""
+        global REGION
+        sel = tk.Toplevel(root)
+        sel.overrideredirect(True)
+        sel.attributes("-topmost", True)
+        width = root.winfo_screenwidth()
+        height = root.winfo_screenheight()
+        try:
+            sel.attributes("-transparentcolor", "white")
+            bg = "white"
+        except tk.TclError:
+            bg = "black"
+        canvas_sel = tk.Canvas(sel, width=width, height=height, bg=bg, cursor="cross", highlightthickness=0)
+        canvas_sel.pack(fill="both", expand=True)
+
+        start = [0, 0]
+        rect = None
+
+        def on_press(event):
+            nonlocal rect
+            start[0] = event.x
+            start[1] = event.y
+            rect = canvas_sel.create_rectangle(event.x, event.y, event.x, event.y, outline="red", width=2)
+
+        def on_drag(event):
+            if rect:
+                canvas_sel.coords(rect, start[0], start[1], event.x, event.y)
+
+        def on_release(event):
+            left = min(start[0], event.x)
+            top = min(start[1], event.y)
+            w = abs(event.x - start[0])
+            h = abs(event.y - start[1])
+            REGION = {"left": left, "top": top, "width": w, "height": h}
+            sel.destroy()
+            update_overlay_region(canvas, REGION)
+            show_status_overlay(root, REGION, "Region updated", auto_destroy_ms=1000)
+
+        canvas_sel.bind("<ButtonPress-1>", on_press)
+        canvas_sel.bind("<B1-Motion>", on_drag)
+        canvas_sel.bind("<ButtonRelease-1>", on_release)
+
     def toggle_bubbles():
+        """Show or hide translated bubbles and notify the user."""
         nonlocal bubbles_visible
         bubbles_visible = not bubbles_visible
         # remove drawn items
@@ -167,6 +233,8 @@ def main():
             canvas.delete(item)
         bubble_items.clear()
         logger.info("Bubbles %s", "shown" if bubbles_visible else "hidden")
+        msg = "Bubbles shown" if bubbles_visible else "Bubbles hidden"
+        show_status_overlay(root, REGION, msg, auto_destroy_ms=1000)
 
     def run_ocr_cycle():
         nonlocal last_coords
@@ -221,6 +289,10 @@ def main():
                 smoothing=align_smoothing,
                 coord_out=coords,
                 bubble_shape=bubble_shape,
+                font_path=font_path,
+                text_color=text_color,
+                outline_color=outline_color,
+                bg_alpha=bg_alpha,
             )
             bubble_items.extend(new_items)
             last_coords = coords
@@ -252,12 +324,17 @@ def main():
     keyboard.add_hotkey(hotkeys.get('toggle_bubbles', 'f9'), toggle_bubbles)
     keyboard.add_hotkey(hotkeys.get('video', 'f7'), toggle_video_mode)
     keyboard.add_hotkey(hotkeys.get('history', 'f6'), lambda: show_history_popup(root))
+    keyboard.add_hotkey(hotkeys.get('select_region', 'f10'), select_capture_region)
     keyboard.add_hotkey(hotkeys.get('quit', 'esc'), root.destroy)
 
     logger.info(
-        "App ready. Press %s for OCR, %s for video, %s for history, %s to quit.",
+        (
+            "App ready. Press %s for OCR, %s for video, %s for region select, "
+            "%s for history, %s to quit."
+        ),
         hotkeys.get('ocr', 'f8').upper(),
         hotkeys.get('video', 'f7').upper(),
+        hotkeys.get('select_region', 'f10').upper(),
         hotkeys.get('history', 'f6').upper(),
         hotkeys.get('quit', 'esc').upper(),
     )

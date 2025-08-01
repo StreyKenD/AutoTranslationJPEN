@@ -16,7 +16,7 @@ GitHub
 eliteai.tools
 .
 
-[ ] Run side-by-side comparisons: PaddleOCR vs Manga-OCR on multi-bubble layouts.
+[ ] Evaluate Manga-OCR accuracy on multi-bubble layouts.
 
 [ ] Capture OCR confidence metrics to flag low-quality recognition instances.
 

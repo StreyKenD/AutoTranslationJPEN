@@ -16,17 +16,24 @@ CORNER_RADIUS = 10            # corner radius for overlay box
 
 logger = logging.getLogger(__name__)
 
-def draw_translated_bubbles(canvas, region_img, blocks, translations, region):
-    """
-    Draw translated bubbles on a single Tkinter canvas, placing each
-    translation into its corresponding bubble region with a blurred
-    background for readability.
+def draw_translated_bubbles(canvas, region_img, blocks, translations, region, replace_mode: bool = False):
+    """Draw translated bubbles on the canvas.
 
-    canvas: Tkinter Canvas to draw on
-    region_img: PIL.Image of the captured region
-    blocks: list of (orig_text, (x1,y1,x2,y2), conf, angle)
-    translations: list of translated strings matching blocks order
-    region: dict with 'left','top','width','height'
+    Parameters
+    ----------
+    canvas : ``tkinter.Canvas``
+        Canvas to draw on.
+    region_img : ``PIL.Image``
+        Captured region image.
+    blocks : list
+        Tuples ``(text, (x1, y1, x2, y2), conf, angle)``.
+    translations : list
+        Translated strings matching ``blocks`` order.
+    region : dict
+        Region info with ``left``, ``top``, ``width`` and ``height``.
+    replace_mode : bool
+        If ``True``, draw on a plain white background instead of
+        using the blurred patch.
     """
     canvas_items = []
     # Keep references to PhotoImage to prevent GC
@@ -48,15 +55,14 @@ def draw_translated_bubbles(canvas, region_img, blocks, translations, region):
             y2_rel = y2 - region_y
 
             patch = region_img.crop((x1_rel, y1_rel, x2_rel, y2_rel))
-            bg = patch.filter(ImageFilter.GaussianBlur(BLUR_RADIUS))
-
-            # 1.5: Darken the blurred patch slightly to improve contrast
-            overlay = Image.new("RGBA", bg.size, (0, 0, 0, 80))
-            bg = Image.alpha_composite(bg.convert("RGBA"), overlay)
-
-            # 1.6: White-wash the blur to completely hide underlying text
-            white_wash = Image.new("RGBA", bg.size, (255, 255, 255, BG_ALPHA))
-            bg = Image.alpha_composite(bg, white_wash)
+            if replace_mode:
+                bg = Image.new("RGBA", patch.size, (255, 255, 255, BG_ALPHA))
+            else:
+                bg = patch.filter(ImageFilter.GaussianBlur(BLUR_RADIUS))
+                overlay = Image.new("RGBA", bg.size, (0, 0, 0, 80))
+                bg = Image.alpha_composite(bg.convert("RGBA"), overlay)
+                white_wash = Image.new("RGBA", bg.size, (255, 255, 255, BG_ALPHA))
+                bg = Image.alpha_composite(bg, white_wash)
 
             # 2. Prepare overlay image and draw semi-transparent background
             img = Image.new("RGBA", (w, h))

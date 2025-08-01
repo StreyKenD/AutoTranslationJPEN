@@ -1,0 +1,9 @@
+{
+  "hotkeys": {
+    "ocr": "f8",
+    "toggle_bubbles": "f9",
+    "quit": "esc"
+  },
+  "bubble_padding": 8,
+  "replace_mode": false
+}

@@ -2,6 +2,7 @@
 from manga_ocr import MangaOcr
 from PIL import Image
 import numpy as np
+import cv2
 import re
 
 # Initialize OCR once (loads ~400 MB model at startup) :contentReference[oaicite:1]{index=1}
@@ -18,18 +19,39 @@ def estimate_confidence(text: str) -> float:
     matches = len(JAPANESE_RE.findall(text))
     return matches / len(text)
 
+
+def detect_text_orientation(img: Image.Image) -> str:
+    """Return ``horizontal``, ``vertical`` or ``mixed`` for the given image."""
+    arr = np.array(img.convert("L"))
+    sobelx = cv2.Sobel(arr, cv2.CV_64F, 1, 0, ksize=3)
+    sobely = cv2.Sobel(arr, cv2.CV_64F, 0, 1, ksize=3)
+    horiz = np.mean(np.abs(sobelx))
+    vert = np.mean(np.abs(sobely))
+    if horiz > vert * 1.2:
+        return "horizontal"
+    if vert > horiz * 1.2:
+        return "vertical"
+    return "mixed"
+
 def extract_text(img):
-    """Return recognized text, box and confidence for the given image."""
+    """Return recognized text, box, confidence and angle for ``img``."""
     if isinstance(img, np.ndarray):
         img = Image.fromarray(img)
     elif not isinstance(img, Image.Image):
         raise ValueError(f"img must be a path or PIL.Image, got {type(img)}")
-    
+
     try:
-        result = _mocr(img)
+        orient = detect_text_orientation(img)
+        if orient == "vertical":
+            proc_img = img.rotate(90, expand=True)
+            angle = 90
+        else:
+            proc_img = img
+            angle = 0
+
+        result = _mocr(proc_img)
         conf = estimate_confidence(result)
-        # Wrap result with a heuristic confidence score
-        return [(result, (0, 0, img.width, img.height), conf, 0)]
+        return [(result, (0, 0, img.width, img.height), conf, angle)]
     except Exception as e:
         print("OCR Error:", e)
         return []

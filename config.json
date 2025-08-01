@@ -4,7 +4,8 @@
     "toggle_bubbles": "f9",
     "video": "f7",
     "quit": "esc",
-    "history": "f6"
+    "history": "f6",
+    "select_region": "f10"
   },
   "bubble_padding": 8,
   "replace_mode": false,

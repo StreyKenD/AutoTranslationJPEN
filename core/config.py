@@ -34,7 +34,10 @@ def load_config():
         try:
             with open(CONFIG_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            DEFAULT_CONFIG.update(data)
+        except json.JSONDecodeError as e:
+            logger.error("Failed to parse %s: %s", CONFIG_PATH, e)
         except Exception as e:
             logger.error("Failed to load config: %s", e)
+        else:
+            DEFAULT_CONFIG.update(data)
     return DEFAULT_CONFIG

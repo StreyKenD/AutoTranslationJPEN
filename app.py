@@ -212,6 +212,7 @@ def main():
 
         # draw translated bubbles if visible
         if bubbles_visible and blocks and translations:
+            coords = {}
             bubble_items = draw_translated_bubbles(
                 canvas,
                 region_img,

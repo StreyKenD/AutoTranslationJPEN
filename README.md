@@ -222,7 +222,6 @@ bubble to view a tooltip showing both the original Japanese and the English
 translation. Set ``align_smoothing`` above zero to dampen small position changes
 between frames for a steadier overlay.
 
-
 ## Development Setup
 This project uses *pre-commit* with **flake8** for linting. After cloning, run:
 

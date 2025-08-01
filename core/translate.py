@@ -12,12 +12,18 @@ except Exception:  # pragma: no cover - optional dependency
     torch = None
 import logging
 import sqlite3
+
+from threading import Lock
+
 import csv
 from pathlib import Path
 
 DB_PATH = Path(__file__).resolve().parent.parent / "translations.db"
 
-_conn = sqlite3.connect(DB_PATH)
+
+_conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+_DB_LOCK = Lock()
+
 _conn.execute(
     "CREATE TABLE IF NOT EXISTS cache (source TEXT PRIMARY KEY, translated TEXT)"
 )
@@ -50,21 +56,27 @@ def set_engine(engine: str) -> None:
         engine = "google"
     TRANSLATOR = engine
 
+
+
 def _lookup_cache(text: str) -> str | None:
     """Return cached translation if available."""
-    cur = _conn.execute("SELECT translated FROM cache WHERE source=?", (text,))
-    row = cur.fetchone()
+    with _DB_LOCK:
+        cur = _conn.execute("SELECT translated FROM cache WHERE source=?", (text,))
+        row = cur.fetchone()
+
     return row[0] if row else None
 
 
 def _store_cache(text: str, translation: str) -> None:
     """Persist a translation to the cache."""
     try:
-        _conn.execute(
-            "INSERT OR REPLACE INTO cache (source, translated) VALUES (?, ?)",
-            (text, translation),
-        )
-        _conn.commit()
+        with _DB_LOCK:
+            _conn.execute(
+                "INSERT OR REPLACE INTO cache (source, translated) VALUES (?, ?)",
+                (text, translation),
+            )
+            _conn.commit()
+
     except Exception as e:
         logging.error("Cache store failed: %s", e)
 

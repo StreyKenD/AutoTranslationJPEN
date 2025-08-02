@@ -2,7 +2,7 @@
 from core.capture import grab_region
 from core.yolo_bubble import detect_bubbles
 from core.manga_ocr import extract_text
-from core.translate import translate_batch
+from core.translate import translate_batch, TRANSLATOR
 import logging
 import cv2
 from pathlib import Path
@@ -16,8 +16,15 @@ BUBBLE_DIR.mkdir(exist_ok=True)
 BUBBLE_CSV = BUBBLE_DIR / "bubbles.csv"
 
 
-def _log_bubble(crop, text: str, translation: str) -> None:
-    """Save bubble image and translation entry."""
+def _log_bubble(
+    crop,
+    text: str,
+    translation: str,
+    engine: str,
+    conf: float,
+    edited: bool = False,
+) -> None:
+    """Save bubble image and translation entry with metadata."""
     import time
     img_path = BUBBLE_DIR / f"bubble_{int(time.time()*1000)}.png"
     try:
@@ -29,8 +36,17 @@ def _log_bubble(crop, text: str, translation: str) -> None:
         with open(BUBBLE_CSV, "a", encoding="utf-8", newline="") as f:
             writer = csv.writer(f)
             if write_header:
-                writer.writerow(["image", "japanese", "english"])
-            writer.writerow([img_path.name, text, translation])
+                writer.writerow(
+                    [
+                        "image",
+                        "japanese",
+                        "english",
+                        "engine",
+                        "confidence",
+                        "edited",
+                    ]
+                )
+            writer.writerow([img_path.name, text, translation, engine, f"{conf:.2f}", int(edited)])
     except Exception as e:  # pragma: no cover
         logger.error("Failed to log bubble image: %s", e)
 
@@ -68,7 +84,7 @@ def process_region(
     if timings is not None:
         timings['grab_region'] = t1 - t0
 
-    bubble_crops = detect_bubbles(img, padding=bubble_padding)
+    bubble_crops = detect_bubbles(img, padding=bubble_padding, return_contours=True)
     logging.info(f"Detected {len(bubble_crops)} bubbles")
     if not bubble_crops:
         logging.info("No bubbles detected. Skipping OCR.")
@@ -86,12 +102,17 @@ def process_region(
     # Step 3: OCR with offset correction
     raw_blocks = []
     crop_images = []
-    for crop, offset in bubble_crops:
+    for data in bubble_crops:
+        if len(data) == 3:
+            crop, offset, contour = data
+        else:
+            crop, offset = data
+            contour = None
         x1_off, y1_off, _, _ = offset
         ocr_results = extract_text(crop)
         for text, (bx1, by1, bx2, by2), conf, angle in ocr_results:
             global_box = (bx1 + x1_off, by1 + y1_off, bx2 + x1_off, by2 + y1_off)
-            raw_blocks.append((text, global_box, conf, angle))
+            raw_blocks.append((text, global_box, conf, angle, contour))
             crop_images.append(crop)
             if conf < conf_threshold:
                 logger.warning("Low OCR confidence %.2f for text: %s", conf, text)
@@ -108,15 +129,16 @@ def process_region(
         timings['ocr_extract'] = t3 - t2
 
     # Step 4: Translate
-    texts = [text for text, _, _, _ in raw_blocks]
+    texts = [text for text, *_ in raw_blocks]
     translations = translate_batch(texts)
     logging.info("Translation complete")
 
     if save_bubble_images:
-        for crop, src, trans in zip(crop_images, texts, translations):
-            _log_bubble(crop, src, trans)
+        conf_values = [b[2] for b in raw_blocks]
+        for crop, src, trans, conf in zip(crop_images, texts, translations, conf_values):
+            _log_bubble(crop, src, trans, TRANSLATOR, conf)
 
-    blocks = [(text, box, conf, angle) for (text, box, conf, angle) in raw_blocks]
+    blocks = [(text, box, conf, angle, contour) for (text, box, conf, angle, contour) in raw_blocks]
     t4 = time.perf_counter()
     if timings is not None:
         timings['translate'] = t4 - t3

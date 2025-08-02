@@ -3,8 +3,12 @@ import textwrap
 import logging
 import tkinter as tk
 from PIL import (
-    Image, ImageDraw, ImageFont,
-    ImageTk, ImageFilter,
+    Image,
+    ImageDraw,
+    ImageFont,
+    ImageTk,
+    ImageFilter,
+    ImageColor,
 )
 
 # Settings (can be moved to config.py later)
@@ -12,8 +16,10 @@ FONT_PATH     = "fonts/animeace2_reg.ttf"
 MIN_FONT_SIZE = 12            # minimum font size
 BLUR_RADIUS   = 5             # radius for background blur
 LINE_SPACING  = 4             # spacing between lines
-BG_ALPHA      = 180           # alpha for white overlay (0-255)
+BG_ALPHA      = 128           # alpha for white overlay (0-255)
 CORNER_RADIUS = 10            # corner radius for overlay box
+TEXT_COLOR    = (255, 255, 255, 255)
+OUTLINE_COLOR = (0, 0, 0, 255)
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +33,14 @@ def draw_translated_bubbles(
     overflow_to_nearby: bool = False,
     show_tooltip: bool = True,
     bubble_shape: str = "ellipse",
+    use_bubble_mask: bool = False,
     prev_coords: dict | None = None,
     smoothing: float = 0.0,
     coord_out: dict | None = None,
+    font_path: str = FONT_PATH,
+    text_color: str | tuple = TEXT_COLOR,
+    outline_color: str | tuple = OUTLINE_COLOR,
+    bg_alpha: int = BG_ALPHA,
 ):
     """Draw translated bubbles on the canvas with optional UX helpers.
 
@@ -40,7 +51,7 @@ def draw_translated_bubbles(
     region_img : ``PIL.Image``
         Captured region image.
     blocks : list
-        Tuples ``(text, (x1, y1, x2, y2), conf, angle)``.
+        Tuples ``(text, (x1, y1, x2, y2), conf, angle, contour)``.
     translations : list
         Translated strings matching ``blocks`` order.
     region : dict
@@ -54,12 +65,23 @@ def draw_translated_bubbles(
         Display the original + translated text on hover.
     bubble_shape : str, optional
         Either ``"ellipse"`` or ``"rect"`` to control overlay geometry.
+    use_bubble_mask : bool, optional
+        Mask overlays using the precise bubble contour when available.
     prev_coords : dict, optional
         Previous coordinates keyed by translation for alignment smoothing.
     smoothing : float, optional
         Blend factor for position smoothing ``0``-``1``.
     coord_out : dict, optional
         Dictionary populated with the final coordinates for each translation.
+    font_path : str, optional
+        Path to a TTF font used for the translated text.
+    text_color : str or tuple, optional
+        Fill color for the translated text.
+    outline_color : str or tuple, optional
+        Outline color around the text for readability.
+    bg_alpha : int, optional
+        Alpha value for the bubble background (0-255).
+        ``128`` corresponds to 50% transparency.
     """
     canvas_items = []
     if not hasattr(canvas, "images"):
@@ -92,7 +114,14 @@ def draw_translated_bubbles(
             tooltip_win = None
 
     hide_tip()
-    for (orig, (x1, y1, x2, y2), conf, angle), translated in zip(blocks, translations):
+    if isinstance(text_color, str):
+        tc = ImageColor.getrgb(text_color)
+        text_color = (*tc, 255)
+    if isinstance(outline_color, str):
+        oc = ImageColor.getrgb(outline_color)
+        outline_color = (*oc, 255)
+
+    for (orig, (x1, y1, x2, y2), conf, angle, contour), translated in zip(blocks, translations):
         try:
             w, h = x2 - x1, y2 - y1
 
@@ -107,13 +136,11 @@ def draw_translated_bubbles(
 
             patch = region_img.crop((x1_rel, y1_rel, x2_rel, y2_rel))
             if replace_mode:
-                bg = Image.new("RGBA", patch.size, (255, 255, 255, BG_ALPHA))
+                bg = Image.new("RGBA", patch.size, (255, 255, 255, bg_alpha))
             else:
-                bg = patch.filter(ImageFilter.GaussianBlur(BLUR_RADIUS))
-                overlay = Image.new("RGBA", bg.size, (0, 0, 0, 80))
-                bg = Image.alpha_composite(bg.convert("RGBA"), overlay)
-                white_wash = Image.new("RGBA", bg.size, (255, 255, 255, BG_ALPHA))
-                bg = Image.alpha_composite(bg, white_wash)
+                bg = patch.filter(ImageFilter.GaussianBlur(BLUR_RADIUS)).convert("RGBA")
+                white = Image.new("RGBA", bg.size, (255, 255, 255, 255))
+                bg = Image.blend(bg, white, bg_alpha / 255)
 
             # 2. Prepare overlay image and draw semi-transparent background
             img = Image.new("RGBA", (w, h))
@@ -122,7 +149,11 @@ def draw_translated_bubbles(
             mask_draw = ImageDraw.Draw(mask)
             shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
             shadow_draw = ImageDraw.Draw(shadow)
-            if bubble_shape == "ellipse":
+            if use_bubble_mask and contour is not None:
+                rel = [(px - x1, py - y1) for px, py in contour]
+                mask_draw.polygon(rel, fill=255)
+                shadow_draw.polygon(rel, fill=(0, 0, 0, 120))
+            elif bubble_shape == "ellipse":
                 mask_draw.ellipse([(0, 0), (w, h)], fill=255)
                 shadow_draw.ellipse([(0, 0), (w, h)], fill=(0, 0, 0, 120))
             else:
@@ -143,9 +174,9 @@ def draw_translated_bubbles(
             overflow = False
             while True:
                 try:
-                    font = ImageFont.truetype(FONT_PATH, font_size)
+                    font = ImageFont.truetype(font_path, font_size)
                 except IOError:
-                    logger.warning(f"Failed to load font at {FONT_PATH}, using default.")
+                    logger.warning("Failed to load font at %s, using default.", font_path)
                     font = ImageFont.load_default()
 
                 max_chars = max(10, w // (font_size * 2 // 3))
@@ -178,6 +209,17 @@ def draw_translated_bubbles(
                 if x_draw + w > region["left"] + region["width"]:
                     x_draw = x1 - w - 10
                 y_draw = y1
+                arrow_color = "#%02x%02x%02x" % text_color[:3]
+                arrow = canvas.create_line(
+                    x1 + w // 2,
+                    y1 + h // 2,
+                    x_draw,
+                    y_draw + h // 2,
+                    arrow=tk.LAST,
+                    fill=arrow_color,
+                    width=2,
+                )
+                canvas_items.append(arrow)
             else:
                 x_draw = x1
                 y_draw = y1
@@ -200,17 +242,17 @@ def draw_translated_bubbles(
                     for dy in (-1, 0, 1):
                         if dx or dy:
                             draw.text(
-                                (x_text+dx, y_text+dy),
+                                (x_text + dx, y_text + dy),
                                 line,
                                 font=font,
-                                fill=(0, 0, 0, 255)
+                                fill=outline_color,
                             )
                 # main text
                 draw.text(
                     (x_text, y_text),
                     line,
                     font=font,
-                    fill=(255, 255, 255, 255)
+                    fill=text_color,
                 )
 
             # 7. Convert to PhotoImage and draw on canvas

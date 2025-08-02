@@ -28,6 +28,7 @@ A local tool for translating manga images with automatic bubble detection and ov
   - Dynamic font sizing per bubble.
   - Outline/drop shadow text for readability.
   - Smooth fade-in overlay animations.
+  - Optional subtitle mode with bubble navigation hotkeys.
 - ⚡ **Performance:**
   - Avoid redundant resizing.
   - Use original image for YOLO, only resize for OCR.
@@ -72,8 +73,13 @@ All settings in `config.json`:
     "ocr": "f8",
     "toggle_bubbles": "f9",
     "video": "f7",
+    "next_bubble": "ctrl+right",
+    "prev_bubble": "ctrl+left",
+    "copy_translation": "ctrl+c",
+    "toggle_subtitles": "ctrl+s",
     "quit": "esc",
-    "history": "f6"
+    "history": "f6",
+    "select_region": "f10"
   },
   "bubble_padding": 8,
   "replace_mode": false,
@@ -82,10 +88,37 @@ All settings in `config.json`:
   "tooltip_overlay": true,
   "align_smoothing": 0.5,
   "bubble_shape": "ellipse",
+  "use_bubble_mask": false,
+  "overlay_font": "fonts/animeace2_reg.ttf",
+  "overlay_text_color": "#ffffff",
+  "overlay_outline_color": "#000000",
+  "overlay_bg_alpha": 128,
   "translator": "google",
   "video_fps": 2,
-  "ocr_confidence_threshold": 0.5
+  "ocr_confidence_threshold": 0.5,
+  "subtitle_mode": false,
+  "highlight_color": "#ffff00",
+  "highlight_width": 2
 }
+```
+Customize overlay style with these options:
+- `overlay_font` – path to a TTF font for translated text
+- `overlay_text_color` – hex color for text (e.g. `"#ffffff"`)
+- `overlay_outline_color` – hex color for the text outline
+- `overlay_bg_alpha` – background opacity from 0-255 (128 gives 50% transparency)
+- `use_bubble_mask` – mask overlays to the detected bubble contour
+- `subtitle_mode` – show translations in a corner subtitle box instead of on top of bubbles
+- `highlight_color` – hex color for the bubble highlight outline
+- `highlight_width` – outline thickness when highlighting a bubble
+
+### Hotkeys
+
+Additional shortcuts help you navigate bubbles:
+
+- **Ctrl+Right** / **Ctrl+Left** – cycle through detected bubbles
+- **Ctrl+C** – copy the current bubble's translation
+- **Ctrl+S** – toggle subtitle mode on or off
+
 Set "translator": "marian" for offline MarianMT.
 
 "best" uses both Google and Marian, picks the best.
@@ -147,19 +180,23 @@ Editar
 - [ ] Evaluate Manga-OCR on complex multi-bubble layouts.
 - [x] Capture OCR confidence metrics for low-quality results.
 
-## 3. Translation Engine
-- [ ] Benchmark DeepL, Google, and others for speed/quality.
-- [ ] Build fallback translation paths.
+-## 3. Translation Engine
+- [x] Benchmark DeepL, Google, and others for speed/quality.
+- [x] Build fallback translation paths.
 - [ ] Experiment with context-aware LLM translation.
 
 ## 4. Live Capture & Overlay
 - [ ] Set up live capture (OpenCV/FFmpeg).
 - [ ] Overlay renderer: resize dynamically, match style, add outlines.
 - [x] Toggle overlay style (in-place or nearby).
+- [x] Flexible region selection for live capture.
 
 ## 5. Logging & History
 - [x] Log each translation (original, translated, timestamp, screenshot).
 - [x] Build UI for browsing and exporting history.
+- [x] Search history entries and preview bubble crops.
+- [x] Export logs as CSV, JSON, or SRT with engine and confidence.
+- [x] Show usage stats (total bubbles, common words).
 
 ## 6. UX Tuning & Edge Cases
 - [x] Detect overflow, auto-resize or switch overlay.

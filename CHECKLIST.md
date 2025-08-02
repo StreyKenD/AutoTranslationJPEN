@@ -54,11 +54,11 @@ Multi-bubble Evaluation:
 
 Benchmark Manga-OCR’s output when bubbles are densely packed or have stylized fonts.
 
-Record processing speed, especially with GPU acceleration.
+Record processing speed, especially with GPU acceleration. **Implemented**
 
 Text Orientation Detection:
 
-Add logic to handle horizontal, vertical, and mixed text bubbles reliably.
+Add logic to handle horizontal, vertical, and mixed text bubbles reliably. **Implemented**
 
 Fallback Mechanisms:
 
@@ -67,11 +67,11 @@ Allow switching between OCR engines if Manga-OCR fails (e.g., for highly decorat
 3. Translation Engine
 Engine Benchmarking:
 
-Compare DeepL, Google Translate, MarianMT, LibreTranslate, and hybrid approaches for speed, cost, and naturalness.
+Compare DeepL, Google Translate, MarianMT, LibreTranslate, and hybrid approaches for speed, cost, and naturalness. **Implemented**
 
 Failover and Retry:
 
-Build robust fallback: try another engine/API if one fails or rate-limits.
+Build robust fallback: try another engine/API if one fails or rate-limits. **Implemented**
 
 Contextual Awareness:
 
@@ -84,17 +84,17 @@ Allow users to pick source/target languages for non-Japanese manga.
 4. Live Capture & Overlay
 Flexible Region Selection:
 
-Let users select the screen/window region for live translation, not just fixed coordinates.
+Let users select the screen/window region for live translation, not just fixed coordinates. **Implemented**
 
 Animated Overlay Rendering:
 
-Add smooth transitions/fades, animated positioning for overlays.
+Add smooth transitions/fades, animated positioning for overlays. **Implemented**
 
 Overlay Customization:
 
-Provide options for font, size, color, outline, and background style per user.
+Provide options for font, size, color, outline, and background style per user. **Implemented**
 
-User can toggle outline, drop shadow, and bubble mask.
+User can toggle outline, drop shadow, and bubble mask. **Implemented**
 
 Performance Controls:
 
@@ -104,25 +104,24 @@ Frame-skip/batching for low-power devices.
 
 5. Logging, History & Export
 Translation History UI:
-
-Search, filter, and browse past translations with image previews.
+Search, filter, and browse past translations with image previews. **Implemented**
 
 Link to manga panel frame or region if available.
 
 Advanced Export:
 
-Export translation logs as JSON, CSV, or subtitle (SRT/ASS) formats.
+Export translation logs as JSON, CSV, or subtitle (SRT/ASS) formats. **Implemented**
 
 Option to anonymize sensitive content in export.
 
 Persistent Analytics:
 
-Track most frequent words, bubble size stats, and per-chapter translation counts.
+Track most frequent words, bubble size stats, and per-chapter translation counts. **Implemented**
 
 6. UX Tuning & Edge Cases
 Overflow Handling:
 
-Detect and handle cases where the translation cannot fit: offer scroll, wrap, or pop-out overlay.
+Detect and handle cases where the translation cannot fit: offer scroll, wrap, or pop-out overlay. **Implemented**
 
 Bubble Matching Robustness:
 
@@ -180,7 +179,7 @@ Integrate vision-language models for context-aware translation and dialogue.
 
 Real-time Subtitle/Overlay Modes:
 
-Subtitle stream in a fixed corner, optionally color-coded by speaker/bubble.
+Subtitle stream in a fixed corner, optionally color-coded by speaker/bubble. **Implemented**
 
 Community Feedback Loop:
 
@@ -203,7 +202,7 @@ Purge old debug images/logs after N days or let users set a limit.
 
 Better Hotkey Feedback:
 
-On-screen notification when a hotkey is triggered.
+On-screen notification when a hotkey is triggered. **Implemented**
 
 UI Polish:
 

@@ -5,6 +5,51 @@ import logging
 logger = logging.getLogger(__name__)
 _current_status_win = None
 
+def _animate_alpha(window, start: float, end: float, duration: int = 300) -> None:
+    """Smoothly animate window alpha from ``start`` to ``end``."""
+    steps = 10
+    step_ms = max(1, duration // steps)
+
+    def _step(i: int = 0) -> None:
+        alpha = start + (end - start) * (i / steps)
+        try:
+            window.attributes("-alpha", alpha)
+        except tk.TclError:
+            return
+        if i < steps:
+            window.after(step_ms, _step, i + 1)
+
+    _step()
+
+def fade_in(window, duration: int = 300) -> None:
+    """Fade in the given window."""
+    _animate_alpha(window, 0.0, 1.0, duration)
+
+def fade_out(window, duration: int = 300, destroy: bool = True) -> None:
+    """Fade out the given window and optionally destroy it when done."""
+    def _on_finish() -> None:
+        if destroy:
+            try:
+                window.destroy()
+            except tk.TclError:
+                pass
+
+    steps = 10
+    step_ms = max(1, duration // steps)
+
+    def _step(i: int = 0) -> None:
+        alpha = 1.0 - (i / steps)
+        try:
+            window.attributes("-alpha", alpha)
+        except tk.TclError:
+            return
+        if i < steps:
+            window.after(step_ms, _step, i + 1)
+        else:
+            _on_finish()
+
+    _step()
+
 def show_status_overlay(root, region, message, auto_destroy_ms=None):
     """
     Shows a status message in a floating transparent window above the capture region.

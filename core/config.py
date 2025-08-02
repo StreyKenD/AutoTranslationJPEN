@@ -11,18 +11,6 @@ from typing import Any, Dict
 logger = logging.getLogger(__name__)
 
 DEFAULT_CONFIG: Dict[str, Any] = {
-    "hotkeys": {
-        "ocr": "alt+shift+o",
-        "toggle_bubbles": "alt+shift+b",
-        "video": "alt+shift+v",
-        "next_bubble": "alt+shift+right",
-        "prev_bubble": "alt+shift+left",
-        "copy_translation": "alt+shift+c",
-        "toggle_subtitles": "alt+shift+s",
-        "quit": "alt+shift+q",
-        "history": "alt+shift+h",
-        "select_region": "alt+shift+r",
-    },
     "bubble_padding": 8,
     "bubble_min_width": 25,
     "bubble_min_height": 25,

@@ -10,10 +10,10 @@ from __future__ import annotations
 
 import csv
 import logging
+from datetime import datetime
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Optional
 
-import keyboard
 import tkinter as tk
 from PIL import Image, ImageTk
 
@@ -24,7 +24,12 @@ from core.logger import setup_logger
 from core.pipeline import process_region
 from core.translate import set_engine
 from core.ui.drawer import draw_translated_bubbles
-from core.ui.overlay import fade_in, fade_out, show_status_overlay
+from core.ui.overlay import (
+    fade_in,
+    fade_out,
+    show_status_overlay,
+    create_overlay_canvas,
+)
 
 
 CANVAS_BG = "#FF00FF"  # transparent key colour
@@ -50,17 +55,13 @@ def build_overlay_canvas(root: tk.Tk, region: dict) -> tk.Canvas:
     win.geometry(
         f"{region['width']}x{region['height']}+{region['left']}+{region['top']}"
     )
-    try:
-        win.attributes("-transparentcolor", CANVAS_BG)
-    except tk.TclError:
-        pass
 
-    canvas = tk.Canvas(
+    canvas = create_overlay_canvas(
         win,
-        width=region["width"],
-        height=region["height"],
-        bg=CANVAS_BG,
-        highlightthickness=0,
+        region["width"],
+        region["height"],
+        fallback_color="white",
+        transparent_color=CANVAS_BG,
     )
     canvas.pack(fill="both", expand=True)
     canvas.create_rectangle(
@@ -102,7 +103,6 @@ class TranslatorApp:
 
         cfg = load_config("config.json")
         self.cfg = cfg
-        self.hotkeys = cfg.get("hotkeys", {})
 
         set_engine(cfg.get("translator", "google"))
 
@@ -139,32 +139,130 @@ class TranslatorApp:
         self.subtitle_win: Optional[tk.Toplevel] = None
         self.subtitle_label: Optional[tk.Label] = None
 
+        self.translation_log: list[dict[str, str]] = []
+        self.log_panel: Optional[tk.Toplevel] = None
+        self.log_listbox: Optional[tk.Listbox] = None
+
+        self.controls_win: Optional[tk.Toplevel] = None
+        self.log_button: Optional[tk.Button] = None
+        self.video_button: Optional[tk.Button] = None
+        self.bubble_button: Optional[tk.Button] = None
+        self.subtitle_button: Optional[tk.Button] = None
+        self._build_controls()
+
         self.frame_grabber = FrameGrabber(self.region, fps=self.fps)
         self.video_running = False
         self._video_id: Optional[str] = None
 
-        self._register_hotkeys()
+        self._position_controls()
 
     # ------------------------------------------------------------------
     # UI helpers
-    def _register_hotkeys(self) -> None:
-        """Bind keyboard shortcuts from the configuration file."""
+    def _build_controls(self) -> None:
+        """Create the on-screen button panel for user interaction."""
 
-        hk = self.hotkeys
+        self.controls_win = tk.Toplevel(self.root)
+        self.controls_win.overrideredirect(True)
+        self.controls_win.attributes("-topmost", True)
 
-        def add(name: str, callback: Callable[[], None]) -> None:
-            keyboard.add_hotkey(hk.get(name), callback, suppress=True)
+        frame = tk.Frame(self.controls_win)
+        frame.pack()
 
-        add("ocr", self.run_ocr_cycle)
-        add("toggle_bubbles", self.toggle_bubbles)
-        add("video", self.toggle_video_mode)
-        add("history", self.show_history_popup)
-        add("select_region", self.select_capture_region)
-        add("next_bubble", self.cycle_next)
-        add("prev_bubble", self.cycle_prev)
-        add("copy_translation", self.copy_current)
-        add("toggle_subtitles", self.toggle_subtitles)
-        add("quit", self.root.destroy)
+        tk.Button(frame, text="OCR", command=self.run_ocr_cycle).pack(side="left")
+
+        self.video_button = tk.Button(
+            frame, text="Start Video", command=self.toggle_video_mode
+        )
+        self.video_button.pack(side="left")
+
+        self.bubble_button = tk.Button(
+            frame, text="Hide Bubbles", command=self.toggle_bubbles
+        )
+        self.bubble_button.pack(side="left")
+
+        self.subtitle_button = tk.Button(
+            frame,
+            text="Hide Subs" if self.subtitle_visible else "Show Subs",
+            command=self.toggle_subtitles,
+        )
+        self.subtitle_button.pack(side="left")
+
+        tk.Button(frame, text="Select Region", command=self.select_capture_region).pack(
+            side="left"
+        )
+        tk.Button(frame, text="History", command=self.show_history_popup).pack(
+            side="left"
+        )
+
+        self.log_button = tk.Button(
+            frame, text="View Log", command=self.toggle_log_panel
+        )
+        self.log_button.pack(side="left")
+
+        tk.Button(frame, text="Quit", command=self.root.destroy).pack(side="left")
+
+    def _position_controls(self) -> None:
+        """Position the control panel near the capture region."""
+
+        if not self.controls_win:
+            return
+        self.controls_win.update_idletasks()
+        width = self.controls_win.winfo_width()
+        height = self.controls_win.winfo_height()
+        x = self.region["left"]
+        y = max(0, self.region["top"] - height)
+        self.controls_win.geometry(f"{width}x{height}+{x}+{y}")
+
+    def toggle_log_panel(self) -> None:
+        """Show or hide the live translation log panel."""
+
+        if self.log_panel and self.log_panel.winfo_exists():
+            self.log_panel.destroy()
+            self.log_panel = None
+            self.log_listbox = None
+            if self.log_button:
+                self.log_button.configure(text="View Log")
+            return
+
+        self.log_panel = tk.Toplevel(self.root)
+        self.log_panel.title("Translation Log")
+        self.log_panel.attributes("-topmost", True)
+        frame = tk.Frame(self.log_panel)
+        frame.pack(fill="both", expand=True)
+        self.log_listbox = tk.Listbox(frame)
+        self.log_listbox.pack(side="left", fill="both", expand=True)
+        scroll = tk.Scrollbar(frame, command=self.log_listbox.yview)
+        scroll.pack(side="right", fill="y")
+        self.log_listbox.configure(yscrollcommand=scroll.set)
+        self.log_listbox.bind("<Double-Button-1>", self._on_log_select)
+        self._refresh_log_panel()
+        if self.log_button:
+            self.log_button.configure(text="Hide Log")
+
+    def _refresh_log_panel(self) -> None:
+        """Update the log panel with the latest translations."""
+
+        if not self.log_listbox:
+            return
+        self.log_listbox.delete(0, tk.END)
+        for entry in reversed(self.translation_log):
+            text = f"{entry['time']} | {entry['jp']} -> {entry['en']}"
+            self.log_listbox.insert(tk.END, text)
+        self.log_listbox.yview_moveto(0)
+
+    def _on_log_select(self, _event) -> None:
+        """Highlight bubble corresponding to the selected log entry."""
+
+        if not self.log_listbox:
+            return
+        idxs = self.log_listbox.curselection()
+        if not idxs:
+            return
+        # Map listbox index back to original translation index
+        entry = self.translation_log[-(idxs[0] + 1)]
+        if entry["en"] in self.current_translations:
+            self.selected_idx = self.current_translations.index(entry["en"])
+            self._highlight_selected()
 
     # ------------------------------------------------------------------
     # Region selection
@@ -219,6 +317,7 @@ class TranslatorApp:
             sel.destroy()
             update_overlay_region(self.canvas, self.region)
             self.frame_grabber.region = self.region
+            self._position_controls()
             show_status_overlay(
                 self.root, self.region, "Region updated", auto_destroy_ms=1000
             )
@@ -272,6 +371,12 @@ class TranslatorApp:
         self.current_translations = translations
         self.selected_idx = -1
 
+        ts = datetime.now().isoformat(timespec="seconds")
+        for block, trans in zip(blocks, translations):
+            self.translation_log.append({"time": ts, "jp": block[0], "en": trans})
+            self.translation_log = self.translation_log[-20:]
+        self._refresh_log_panel()
+
         if self.subtitle_visible:
             self.update_subtitles(translations)
 
@@ -324,11 +429,15 @@ class TranslatorApp:
             show_status_overlay(
                 self.root, self.region, "Video mode stopped", auto_destroy_ms=1000
             )
+            if self.video_button:
+                self.video_button.config(text="Start Video")
         else:
             self.video_running = True
             self.frame_grabber.start()
             show_status_overlay(self.root, self.region, "Video mode started")
             self._video_loop()
+            if self.video_button:
+                self.video_button.config(text="Stop Video")
 
     # ------------------------------------------------------------------
     # Bubble utilities
@@ -349,6 +458,10 @@ class TranslatorApp:
             fade_in(self.canvas.master, 200)
         else:
             fade_out(self.canvas.master, 200, destroy=False)
+        if self.bubble_button:
+            self.bubble_button.config(
+                text="Hide Bubbles" if self.bubbles_visible else "Show Bubbles"
+            )
 
     def cycle_next(self) -> None:
         """Highlight the next bubble."""
@@ -404,6 +517,10 @@ class TranslatorApp:
             self.subtitle_win.destroy()
             self.subtitle_win = None
             self.subtitle_label = None
+        if self.subtitle_button:
+            self.subtitle_button.config(
+                text="Hide Subs" if self.subtitle_visible else "Show Subs"
+            )
 
     def update_subtitles(self, translations: list[str]) -> None:
         """Update the subtitle window with current translations."""
@@ -496,13 +613,7 @@ class TranslatorApp:
     # Application runner
     def run(self) -> None:
         """Start the Tkinter main loop."""
-
-        self.logger.info(
-            "App ready. Press %s for OCR, %s for video, %s to quit.",
-            self.hotkeys.get("ocr", "f8").upper(),
-            self.hotkeys.get("video", "f7").upper(),
-            self.hotkeys.get("quit", "esc").upper(),
-        )
+        self.logger.info("App ready. Use on-screen buttons to control the app.")
         self.root.mainloop()
 
 

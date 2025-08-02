@@ -35,7 +35,7 @@ A local tool for translating manga images with automatic bubble detection and ov
   - Dynamic font sizing per bubble.
   - Outline/drop shadow text for readability.
   - Smooth fade-in overlay animations.
-  - Optional subtitle mode with bubble navigation hotkeys.
+  - Optional subtitle mode with bubble navigation controls.
 - ⚡ **Performance:**
   - Avoid redundant resizing.
   - Use original image for YOLO, only resize for OCR.
@@ -76,18 +76,6 @@ All settings in `config.json`:
 
 ```json
 {
-  "hotkeys": {
-    "ocr": "f8",
-    "toggle_bubbles": "f9",
-    "video": "f7",
-    "next_bubble": "ctrl+right",
-    "prev_bubble": "ctrl+left",
-    "copy_translation": "ctrl+c",
-    "toggle_subtitles": "ctrl+s",
-    "quit": "esc",
-    "history": "f6",
-    "select_region": "f10"
-  },
   "bubble_padding": 8,
   "replace_mode": false,
   "save_bubble_images": false,
@@ -117,14 +105,6 @@ Customize overlay style with these options:
 - `subtitle_mode` – show translations in a corner subtitle box instead of on top of bubbles
 - `highlight_color` – hex color for the bubble highlight outline
 - `highlight_width` – outline thickness when highlighting a bubble
-
-### Hotkeys
-
-Additional shortcuts help you navigate bubbles:
-
-- **Ctrl+Right** / **Ctrl+Left** – cycle through detected bubbles
-- **Ctrl+C** – copy the current bubble's translation
-- **Ctrl+S** – toggle subtitle mode on or off
 
 Set "translator": "marian" for offline MarianMT.
 

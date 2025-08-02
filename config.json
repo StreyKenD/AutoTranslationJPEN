@@ -1,16 +1,4 @@
 {
-  "hotkeys": {
-    "ocr": "f8",
-    "toggle_bubbles": "f9",
-    "video": "f7",
-    "next_bubble": "ctrl+right",
-    "prev_bubble": "ctrl+left",
-    "copy_translation": "ctrl+c",
-    "toggle_subtitles": "ctrl+s",
-    "quit": "esc",
-    "history": "f6",
-    "select_region": "f10"
-  },
   "bubble_padding": 8,
   "replace_mode": false,
   "save_bubble_images": false,

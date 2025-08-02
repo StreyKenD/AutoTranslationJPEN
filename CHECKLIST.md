@@ -1,7 +1,7 @@
 ✅ Completed Tasks
 Switched OCR Engine: Replaced Tesseract with Manga-OCR for better vertical text and furigana recognition.
 
-Hotkey Configuration: Hotkeys and UI actions can now be edited in config.json instead of being hardcoded.
+Button Controls: Core actions are accessible through on-screen buttons, removing the need for keyboard shortcuts.
 
 Translation Caching: All translations are cached in SQLite to minimize repeated lookups and speed up UX.
 
@@ -200,9 +200,9 @@ Optimize Disk Usage:
 
 Purge old debug images/logs after N days or let users set a limit.
 
-Better Hotkey Feedback:
+Better Button Feedback:
 
-On-screen notification when a hotkey is triggered. **Implemented**
+On-screen notification when a button is clicked. **Implemented**
 
 UI Polish:
 

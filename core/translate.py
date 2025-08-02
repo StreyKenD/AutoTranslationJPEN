@@ -1,11 +1,12 @@
 """Translation helpers with caching and history."""
 
+from __future__ import annotations
+
 from deep_translator import (
-    GoogleTranslator,
     DeeplTranslator,
+    GoogleTranslator,
     LibreTranslator,
 )
-from typing import List
 
 try:
     from transformers import MarianMTModel, MarianTokenizer
@@ -14,13 +15,11 @@ except Exception:  # pragma: no cover - optional dependency
     MarianMTModel = None
     MarianTokenizer = None
     torch = None
+import csv
 import logging
 import sqlite3
-
-from threading import Lock
-
-import csv
 from pathlib import Path
+from threading import Lock
 
 DB_PATH = Path(__file__).resolve().parent.parent / "translations.db"
 
@@ -34,13 +33,24 @@ _conn.execute(
 
 HISTORY_CSV = Path(__file__).resolve().parent.parent / "historico_traducoes.csv"
 
+logger = logging.getLogger(__name__)
+
 TRANSLATOR = "google"
 _model = None
 _tokenizer = None
 
 
 def _prompt_choice(source: str, g_trans: str, m_trans: str) -> str:
-    """Display a small menu on the right side so the user can pick a translation."""
+    """Display a popup to let the user pick a translation.
+
+    Args:
+        source: Original Japanese text.
+        g_trans: Translation from Google.
+        m_trans: Translation from MarianMT.
+
+    Returns:
+        str: Chosen translation.
+    """
     import tkinter as tk
 
     root = tk.Tk()
@@ -53,7 +63,7 @@ def _prompt_choice(source: str, g_trans: str, m_trans: str) -> str:
     width = 320
     top.geometry(f"{width}x200+{top.winfo_screenwidth()-width-10}+50")
 
-    tk.Label(top, text=source, wraplength=width-20, justify="left").pack(
+    tk.Label(top, text=source, wraplength=width - 20, justify="left").pack(
         padx=10, pady=5, anchor="w"
     )
 
@@ -67,14 +77,14 @@ def _prompt_choice(source: str, g_trans: str, m_trans: str) -> str:
     tk.Button(
         top,
         text=g_trans,
-        wraplength=width-20,
+        wraplength=width - 20,
         justify="left",
         command=lambda: _set(g_trans),
     ).pack(fill="both", padx=10, pady=5)
     tk.Button(
         top,
         text=m_trans,
-        wraplength=width-20,
+        wraplength=width - 20,
         justify="left",
         command=lambda: _set(m_trans),
     ).pack(fill="both", padx=10, pady=5)
@@ -86,11 +96,13 @@ def _prompt_choice(source: str, g_trans: str, m_trans: str) -> str:
 def set_engine(engine: str) -> None:
     """Select translation engine.
 
-    Supported values are ``google``, ``deepl``, ``marian``, ``libre``, ``best``
-    and ``choose``. ``best`` runs Google and MarianMT and picks the longest
-    result for each sentence. ``choose`` shows both results in a popup so the
-    user can pick one.
+    Args:
+        engine: Desired engine name. Supported values are ``google``, ``deepl``,
+            ``marian``, ``libre``, ``best`` and ``choose``. ``best`` runs Google
+            and MarianMT and picks the longest result for each sentence.
+            ``choose`` shows both results in a popup so the user can pick one.
     """
+
     global TRANSLATOR, _model, _tokenizer
     engine = engine.lower()
     if engine in {"marian", "best", "choose"} and MarianMTModel and MarianTokenizer:
@@ -99,15 +111,13 @@ def set_engine(engine: str) -> None:
                 _tokenizer = MarianTokenizer.from_pretrained(
                     "Helsinki-NLP/opus-mt-ja-en"
                 )
-                _model = MarianMTModel.from_pretrained(
-                    "Helsinki-NLP/opus-mt-ja-en"
-                )
+                _model = MarianMTModel.from_pretrained("Helsinki-NLP/opus-mt-ja-en")
             except Exception as e:  # pragma: no cover
-                logging.error("Failed to load MarianMT model: %s", e)
+                logger.error("Failed to load MarianMT model: %s", e)
                 if engine == "marian":
                     engine = "google"
     elif engine not in {"google", "deepl", "marian", "libre", "best", "choose"}:
-        logging.warning("Unknown translator '%s', falling back to Google", engine)
+        logger.warning("Unknown translator '%s', falling back to Google", engine)
         engine = "google"
     TRANSLATOR = engine
 
@@ -122,7 +132,12 @@ def _lookup_cache(text: str) -> str | None:
 
 
 def _store_cache(text: str, translation: str) -> None:
-    """Persist a translation to the cache."""
+    """Persist a translation to the cache.
+
+    Args:
+        text: Source string.
+        translation: Translated result.
+    """
     try:
         with _DB_LOCK:
             _conn.execute(
@@ -132,11 +147,17 @@ def _store_cache(text: str, translation: str) -> None:
             _conn.commit()
 
     except Exception as e:
-        logging.error("Cache store failed: %s", e)
+        logger.error("Cache store failed: %s", e)
 
 
 def _log_history(source: str, translated: str, engine: str) -> None:
-    """Append a translation pair with engine info to ``historico_traducoes.csv``."""
+    """Append a translation pair with engine info to ``historico_traducoes.csv``.
+
+    Args:
+        source: Original Japanese text.
+        translated: English translation.
+        engine: Name of the translation engine used.
+    """
     try:
         write_header = not HISTORY_CSV.exists()
         with open(HISTORY_CSV, "a", encoding="utf-8", newline="") as f:
@@ -145,11 +166,12 @@ def _log_history(source: str, translated: str, engine: str) -> None:
                 writer.writerow(["Japanese", "English", "Engine"])
             writer.writerow([source, translated, engine])
     except Exception as e:
-        logging.error("History log failed: %s", e)
+        logger.error("History log failed: %s", e)
 
 
-def _translate_engine(engine: str, texts: List[str]) -> List[str]:
+def _translate_engine(engine: str, texts: list[str]) -> list[str]:
     """Translate ``texts`` using the specified engine."""
+
     try:
         if engine == "google":
             translator = GoogleTranslator(source="ja", target="en")
@@ -166,13 +188,21 @@ def _translate_engine(engine: str, texts: List[str]) -> List[str]:
                 outputs = _model.generate(**inputs)
             return _tokenizer.batch_decode(outputs, skip_special_tokens=True)
     except Exception as e:  # pragma: no cover - network or model failures
-        logging.error("%s translate error: %s", engine, e)
+        logger.error("%s translate error: %s", engine, e)
     return ["" for _ in texts]
 
 
-def translate_batch(texts: List[str]) -> List[str]:
-    """Translate a list of Japanese strings to English with caching."""
-    results: List[str] = ["" for _ in texts]
+def translate_batch(texts: list[str]) -> list[str]:
+    """Translate a list of Japanese strings to English with caching.
+
+    Args:
+        texts: List of Japanese strings.
+
+    Returns:
+        list[str]: Translated strings in the same order.
+    """
+
+    results: list[str] = ["" for _ in texts]
     to_translate: list[str] = []
     indices: list[int] = []
 
@@ -199,20 +229,22 @@ def translate_batch(texts: List[str]) -> List[str]:
                     else:
                         translated.append(_prompt_choice(src, g, m))
         else:
-            engines = [TRANSLATOR] + [e for e in ["google", "deepl", "marian", "libre"] if e != TRANSLATOR]
+            engines = [TRANSLATOR] + [
+                e for e in ["google", "deepl", "marian", "libre"] if e != TRANSLATOR
+            ]
             translated = ["" for _ in to_translate]
             used_engine = TRANSLATOR
             for eng in engines:
                 translated = _translate_engine(eng, to_translate)
                 if any(translated):
-                    logging.info("Translated with %s", eng)
+                    logger.info("Translated with %s", eng)
                     used_engine = eng
                     break
 
         for idx, src, trans in zip(indices, to_translate, translated):
             results[idx] = trans
             _store_cache(src, trans)
-            log_engine = used_engine if 'used_engine' in locals() else TRANSLATOR
+            log_engine = used_engine if "used_engine" in locals() else TRANSLATOR
             _log_history(src, trans, log_engine)
 
     return results

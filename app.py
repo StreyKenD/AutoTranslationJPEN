@@ -153,7 +153,11 @@ class TranslatorApp:
         hk = self.hotkeys
 
         def add(name: str, callback: Callable[[], None]) -> None:
-            keyboard.add_hotkey(hk.get(name), callback, suppress=True)
+            key = hk.get(name)
+            if not key:
+                self.logger.warning("No hotkey configured for %s", name)
+                return
+            keyboard.add_hotkey(key, callback, suppress=True)
 
         add("ocr", self.run_ocr_cycle)
         add("toggle_bubbles", self.toggle_bubbles)
@@ -499,9 +503,9 @@ class TranslatorApp:
 
         self.logger.info(
             "App ready. Press %s for OCR, %s for video, %s to quit.",
-            self.hotkeys.get("ocr", "f8").upper(),
-            self.hotkeys.get("video", "f7").upper(),
-            self.hotkeys.get("quit", "esc").upper(),
+            self.hotkeys.get("ocr", "alt+shift+o").upper(),
+            self.hotkeys.get("video", "alt+shift+v").upper(),
+            self.hotkeys.get("quit", "alt+shift+q").upper(),
         )
         self.root.mainloop()
 

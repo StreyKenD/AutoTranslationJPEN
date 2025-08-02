@@ -45,21 +45,27 @@ DEFAULT_CONFIG: Dict[str, Any] = {
 CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.json"
 
 
-def load_config() -> Dict[str, Any]:
-    """Load configuration from ``config.json`` if present.
+def load_config(path: str | Path | None = None) -> Dict[str, Any]:
+    """Load configuration from a JSON file.
+
+    Args:
+        path: Optional path to the configuration file. Defaults to
+            ``config.json`` at the repository root when ``None``.
 
     Returns:
         dict[str, Any]: Merged configuration dictionary.
     """
 
-    if CONFIG_PATH.exists():
+    cfg_path = Path(path) if path else CONFIG_PATH
+    config = DEFAULT_CONFIG.copy()
+    if cfg_path.exists():
         try:
-            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            with open(cfg_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
         except json.JSONDecodeError as e:
-            logger.error("Failed to parse %s: %s", CONFIG_PATH, e)
+            logger.error("Failed to parse %s: %s", cfg_path, e)
         except Exception as e:  # pragma: no cover - unexpected IO errors
             logger.error("Failed to load config: %s", e)
         else:
-            DEFAULT_CONFIG.update(data)
-    return DEFAULT_CONFIG
+            config.update(data)
+    return config

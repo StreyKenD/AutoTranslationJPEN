@@ -18,6 +18,13 @@ A local tool for translating manga images with automatic bubble detection and ov
 
 ---
 
+## Features
+
+- Background frame grabber keeps video mode responsive and always processes the
+  most recent frame.
+
+---
+
 ## Recommended Upgrades
 
 - 🤖 **Fine-tune YOLO** for manga speech bubbles.

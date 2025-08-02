@@ -91,8 +91,8 @@ def process_region(
         return [], []
     
     debug = img.copy()
-    for _, (x1,y1,x2,y2) in bubble_crops:
-        cv2.rectangle(debug, (x1,y1),(x2,y2),(0,0,255),2)
+    for _, (x1, y1, x2, y2), *_ in bubble_crops:
+        cv2.rectangle(debug, (x1, y1), (x2, y2), (0, 0, 255), 2)
     cv2.imwrite("debug_bubbles.png", debug)
 
     t2 = time.perf_counter()

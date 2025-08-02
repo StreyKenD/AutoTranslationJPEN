@@ -273,6 +273,8 @@ def show_history_popup(root) -> None:
 
     show_status_overlay(root, REGION, "History opened", auto_destroy_ms=1000)
 
+    show_status_overlay(root, REGION, "History opened", auto_destroy_ms=1000)
+
 
 def main():
     cfg = load_config()

@@ -17,7 +17,7 @@ import keyboard
 import tkinter as tk
 from PIL import Image, ImageTk
 
-from core.capture import grab_region
+from core.capture import grab_screen, get_screen_region
 from core.config import load_config
 from core.frame_grabber import FrameGrabber
 from core.logger import setup_logger
@@ -28,7 +28,6 @@ from core.ui.overlay import fade_in, fade_out, show_status_overlay
 
 
 CANVAS_BG = "#FF00FF"  # transparent key colour
-DEFAULT_REGION = {"top": 128, "left": 575, "width": 768, "height": 864}
 
 
 def build_root_window() -> tk.Tk:
@@ -107,7 +106,7 @@ class TranslatorApp:
 
         set_engine(cfg.get("translator", "google"))
 
-        self.region = DEFAULT_REGION.copy()
+        self.region = get_screen_region(1)
         self.fps = int(cfg.get("video_fps", 2))
         self.bubble_padding = int(cfg.get("bubble_padding", 0))
         self.replace_mode = bool(cfg.get("replace_mode", False))
@@ -216,7 +215,9 @@ class TranslatorApp:
             sel.destroy()
             update_overlay_region(self.canvas, self.region)
             self.frame_grabber.region = self.region
-            show_status_overlay(self.root, self.region, "Region updated", auto_destroy_ms=1000)
+            show_status_overlay(
+                self.root, self.region, "Region updated", auto_destroy_ms=1000
+            )
 
         canvas_sel.bind("<ButtonPress-1>", on_press)
         canvas_sel.bind("<B1-Motion>", on_drag)
@@ -238,10 +239,12 @@ class TranslatorApp:
             raw = self.frame_grabber.get_latest()
             if raw is None:
                 self.logger.warning("No frame captured yet")
-                show_status_overlay(self.root, self.region, "No frame", auto_destroy_ms=1000)
+                show_status_overlay(
+                    self.root, self.region, "No frame", auto_destroy_ms=1000
+                )
                 return
         else:
-            raw = grab_region(self.region)
+            raw = grab_screen(monitor=1)
 
         try:
             import cv2
@@ -502,4 +505,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

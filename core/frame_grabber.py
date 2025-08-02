@@ -14,23 +14,21 @@ from typing import Optional
 
 import numpy as np
 
-from .capture import grab_region
+from .capture import get_screen_region, grab_region
 
 
 class FrameGrabber:
     """Continuously capture a screen region in the background.
 
-    Parameters
-    ----------
-    region: dict
-        Dictionary describing the region to capture. Must contain ``top``,
-        ``left``, ``width`` and ``height`` keys.
-    fps: int, optional
-        Target capture rate in frames per second.
+    Args:
+        region: Dictionary describing the region to capture. Must contain
+            ``top``, ``left``, ``width`` and ``height`` keys. If ``None``, the
+            primary monitor is used.
+        fps: Target capture rate in frames per second.
     """
 
-    def __init__(self, region: dict, fps: int = 30) -> None:
-        self.region = region
+    def __init__(self, region: dict[str, int] | None = None, fps: int = 30) -> None:
+        self.region = region or get_screen_region(1)
         self.fps = fps
         self._frame: Optional[np.ndarray] = None
         self._running = False
@@ -60,6 +58,12 @@ class FrameGrabber:
             time.sleep(interval)
 
     def get_latest(self) -> Optional[np.ndarray]:
-        """Return a copy of the most recently captured frame."""
+        """Return a copy of the most recently captured frame.
+
+        Returns:
+            Optional[np.ndarray]: Latest captured frame or ``None`` if no frame
+            has been captured yet.
+        """
+
         with self._lock:
             return None if self._frame is None else self._frame.copy()

@@ -18,13 +18,19 @@ DEBUG_IMAGES = os.environ.get("DEBUG_IMAGES") == "1"
 
 
 def detect_bubbles(
-    image: np.ndarray, padding: int = 0, return_contours: bool = False
+    image: np.ndarray,
+    padding: int = 0,
+    min_width: int = 25,
+    min_height: int = 25,
+    return_contours: bool = False,
 ) -> List[Tuple]:
     """Detect speech bubbles and optionally pad the boxes.
 
     Args:
         image: Source image in BGR order.
         padding: Extra pixels around detected boxes.
+        min_width: Minimum bubble width in pixels.
+        min_height: Minimum bubble height in pixels.
         return_contours: If ``True``, also return the bubble contour points.
 
     Returns:
@@ -38,6 +44,9 @@ def detect_bubbles(
         height, width = image.shape[:2]
         for box in results.boxes.xyxy:
             x1, y1, x2, y2 = map(int, box)
+            w, h = x2 - x1, y2 - y1
+            if w < min_width or h < min_height:
+                continue
             if padding:
                 x1 = max(0, x1 - padding)
                 y1 = max(0, y1 - padding)

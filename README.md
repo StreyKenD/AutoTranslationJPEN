@@ -65,7 +65,7 @@ A local tool for translating manga images with automatic bubble detection and ov
     - `capture.py` – capture/load images
     - `ocr.py` – run Manga-OCR
     - `translate.py` – translation APIs/models
-    - `ui_overlay.py` – draw overlays
+    - `ui_overlay.py` – draw overlays and overlay controls
     - `main.py` – CLI & workflow glue
 
 ---
@@ -77,16 +77,16 @@ All settings in `config.json`:
 ```json
 {
   "hotkeys": {
-    "ocr": "f8",
-    "toggle_bubbles": "f9",
-    "video": "f7",
-    "next_bubble": "ctrl+right",
-    "prev_bubble": "ctrl+left",
-    "copy_translation": "ctrl+c",
-    "toggle_subtitles": "ctrl+s",
-    "quit": "esc",
-    "history": "f6",
-    "select_region": "f10"
+    "ocr": "alt+shift+o",
+    "toggle_bubbles": "alt+shift+b",
+    "video": "alt+shift+v",
+    "next_bubble": "alt+shift+right",
+    "prev_bubble": "alt+shift+left",
+    "copy_translation": "alt+shift+c",
+    "toggle_subtitles": "alt+shift+s",
+    "quit": "alt+shift+q",
+    "history": "alt+shift+h",
+    "select_region": "alt+shift+r"
   },
   "bubble_padding": 8,
   "replace_mode": false,

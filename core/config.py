@@ -11,6 +11,10 @@ DEFAULT_CONFIG = {
         "ocr": "f8",
         "toggle_bubbles": "f9",
         "video": "f7",
+        "next_bubble": "ctrl+right",
+        "prev_bubble": "ctrl+left",
+        "copy_translation": "ctrl+c",
+        "toggle_subtitles": "ctrl+s",
         "quit": "esc",
         "history": "f6"
     },
@@ -21,13 +25,17 @@ DEFAULT_CONFIG = {
     "tooltip_overlay": True,
     "align_smoothing": 0.5,
     "bubble_shape": "ellipse",
+    "use_bubble_mask": False,
     "overlay_font": "fonts/animeace2_reg.ttf",
     "overlay_text_color": "#ffffff",
     "overlay_outline_color": "#000000",
-    "overlay_bg_alpha": 180,
+    "overlay_bg_alpha": 128,
     "translator": "google",
     "video_fps": 2,
-    "ocr_confidence_threshold": 0.5
+    "ocr_confidence_threshold": 0.5,
+    "subtitle_mode": False,
+    "highlight_color": "#ffff00",
+    "highlight_width": 2,
 }
 
 CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.json"

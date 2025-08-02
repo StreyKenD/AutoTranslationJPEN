@@ -88,13 +88,13 @@ Let users select the screen/window region for live translation, not just fixed c
 
 Animated Overlay Rendering:
 
-Add smooth transitions/fades, animated positioning for overlays.
+Add smooth transitions/fades, animated positioning for overlays. **Implemented**
 
 Overlay Customization:
 
 Provide options for font, size, color, outline, and background style per user. **Implemented**
 
-User can toggle outline, drop shadow, and bubble mask.
+User can toggle outline, drop shadow, and bubble mask. **Implemented**
 
 Performance Controls:
 
@@ -104,25 +104,24 @@ Frame-skip/batching for low-power devices.
 
 5. Logging, History & Export
 Translation History UI:
-
-Search, filter, and browse past translations with image previews.
+Search, filter, and browse past translations with image previews. **Implemented**
 
 Link to manga panel frame or region if available.
 
 Advanced Export:
 
-Export translation logs as JSON, CSV, or subtitle (SRT/ASS) formats.
+Export translation logs as JSON, CSV, or subtitle (SRT/ASS) formats. **Implemented**
 
 Option to anonymize sensitive content in export.
 
 Persistent Analytics:
 
-Track most frequent words, bubble size stats, and per-chapter translation counts.
+Track most frequent words, bubble size stats, and per-chapter translation counts. **Implemented**
 
 6. UX Tuning & Edge Cases
 Overflow Handling:
 
-Detect and handle cases where the translation cannot fit: offer scroll, wrap, or pop-out overlay.
+Detect and handle cases where the translation cannot fit: offer scroll, wrap, or pop-out overlay. **Implemented**
 
 Bubble Matching Robustness:
 
@@ -180,7 +179,7 @@ Integrate vision-language models for context-aware translation and dialogue.
 
 Real-time Subtitle/Overlay Modes:
 
-Subtitle stream in a fixed corner, optionally color-coded by speaker/bubble.
+Subtitle stream in a fixed corner, optionally color-coded by speaker/bubble. **Implemented**
 
 Community Feedback Loop:
 

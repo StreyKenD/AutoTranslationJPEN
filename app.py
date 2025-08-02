@@ -3,7 +3,7 @@ import csv
 import json
 from pathlib import Path
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, simpledialog
 import keyboard
 import logging
 
@@ -11,7 +11,12 @@ from PIL import Image
 from core.logger import setup_logger
 from core.pipeline import process_region
 from core.translate import set_engine
-from core.ui.overlay import destroy_status_overlay, show_status_overlay
+from core.ui.overlay import (
+    destroy_status_overlay,
+    fade_in,
+    fade_out,
+    show_status_overlay,
+)
 from core.ui.drawer import draw_translated_bubbles
 from core.capture import grab_region
 from core.config import load_config
@@ -88,50 +93,117 @@ def show_history_popup(root) -> None:
     win = tk.Toplevel(root)
     win.title("Translation History")
 
-    listbox = tk.Listbox(win, width=60)
+    search_var = tk.StringVar()
+    tk.Entry(win, textvariable=search_var).pack(fill="x")
+
+    list_frame = tk.Frame(win)
+    list_frame.pack(fill="both", expand=True)
+    listbox = tk.Listbox(list_frame, width=60)
     listbox.pack(side="left", fill="both", expand=True)
-    scroll = tk.Scrollbar(win, command=listbox.yview)
+    scroll = tk.Scrollbar(list_frame, command=listbox.yview)
     scroll.pack(side="right", fill="y")
     listbox.configure(yscrollcommand=scroll.set)
 
-    history: list[tuple[str, str]] = []
+    preview_label = tk.Label(win)
+    preview_label.pack(fill="both")
+
+    history: list[dict] = []
     try:
-        with open("historico_traducoes.csv", "r", encoding="utf-8") as f:
-            reader = csv.reader(f)
-            next(reader, None)
+        with open("bubble_logs/bubbles.csv", "r", encoding="utf-8") as bf:
+            reader = csv.DictReader(bf)
             for row in reader:
-                if len(row) >= 2:
-                    jp, en = row[0], row[1]
-                    history.append((jp, en))
-                    listbox.insert(tk.END, f"{jp} -> {en}")
+                history.append(
+                    {
+                        "jp": row.get("japanese", ""),
+                        "en": row.get("english", ""),
+                        "img": row.get("image", ""),
+                        "engine": row.get("engine", ""),
+                        "conf": row.get("confidence", ""),
+                        "edited": row.get("edited", "0"),
+                    }
+                )
     except FileNotFoundError:
+        pass
+    if not history:
         listbox.insert(tk.END, "No history found")
+
+    stats_label = tk.Label(win)
+    stats_label.pack(fill="x")
+    if history:
+        total = len(history)
+        words = {}
+        for entry in history:
+            for w in entry["en"].split():
+                words[w.lower()] = words.get(w.lower(), 0) + 1
+        common = sorted(words.items(), key=lambda x: x[1], reverse=True)[:3]
+        common_words = ", ".join(f"{w} ({c})" for w, c in common)
+        stats_label.config(text=f"Total: {total} | Top words: {common_words}")
+
+    filtered: list[int] = []
+
+    def refresh_list(*_args):
+        term = search_var.get().lower()
+        listbox.delete(0, tk.END)
+        filtered.clear()
+        for idx, entry in enumerate(history):
+            if term in entry["jp"].lower() or term in entry["en"].lower():
+                marker = "*" if entry.get("edited") in {"1", 1, True} else ""
+                listbox.insert(tk.END, f"{entry['jp']} -> {entry['en']}{marker}")
+                filtered.append(idx)
+
+    search_var.trace_add("write", refresh_list)
+    refresh_list()
+
+    def _update_preview(event=None):
+        sel = listbox.curselection()
+        if not sel:
+            preview_label.config(image="")
+            preview_label.image = None
+            return
+        idx = filtered[sel[0]]
+        entry = history[idx]
+        img_path = Path("bubble_logs") / entry.get("img", "")
+        try:
+            img = Image.open(img_path)
+            img.thumbnail((200, 200))
+            from PIL import ImageTk
+
+            photo = ImageTk.PhotoImage(img)
+            preview_label.config(image=photo)
+            preview_label.image = photo
+        except Exception as exc:
+            logger.error("Failed to load preview: %s", exc)
+            preview_label.config(image="")
+            preview_label.image = None
+
+    listbox.bind("<<ListboxSelect>>", _update_preview)
 
     def open_image():
         sel = listbox.curselection()
         if not sel:
             return
-        idx = sel[0]
-        jp, en = history[idx]
-        bubbles = Path("bubble_logs/bubbles.csv")
-        if bubbles.exists():
-            with open(bubbles, "r", encoding="utf-8") as bf:
-                breader = csv.reader(bf)
-                next(breader, None)
-                for img, j, e in breader:
-                    if j == jp and e == en:
-                        img_path = Path("bubble_logs") / img
-                        try:
-                            Image.open(img_path).show()
-                        except Exception as exc:
-                            logger.error("Failed to open bubble image: %s", exc)
-                        return
+        idx = filtered[sel[0]]
+        entry = history[idx]
+        img_path = Path("bubble_logs") / entry.get("img", "")
+        try:
+            Image.open(img_path).show()
+        except Exception as exc:
+            logger.error("Failed to open bubble image: %s", exc)
 
     def export_json():
         path = filedialog.asksaveasfilename(defaultextension=".json")
         if not path:
             return
-        data = [{"jp": jp, "en": en} for jp, en in history]
+        data = [
+            {
+                "japanese": h["jp"],
+                "english": h["en"],
+                "engine": h.get("engine", ""),
+                "confidence": h.get("conf", ""),
+                "edited": bool(int(h.get("edited", 0))),
+            }
+            for h in history
+        ]
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
@@ -141,14 +213,65 @@ def show_history_popup(root) -> None:
             return
         with open(path, "w", encoding="utf-8", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(["Japanese", "English"])
-            writer.writerows(history)
+            writer.writerow(["Japanese", "English", "Engine", "Confidence", "Edited"])
+            for h in history:
+                writer.writerow([
+                    h["jp"],
+                    h["en"],
+                    h.get("engine", ""),
+                    h.get("conf", ""),
+                    h.get("edited", "0"),
+                ])
+
+    def export_srt():
+        path = filedialog.asksaveasfilename(defaultextension=".srt")
+        if not path:
+            return
+        with open(path, "w", encoding="utf-8") as f:
+            for i, h in enumerate(history, start=1):
+                start = i - 1
+                end = i
+                f.write(f"{i}\n00:00:{start:02d},000 --> 00:00:{end:02d},000\n{h['en']}\n\n")
+
+    def edit_translation():
+        sel = listbox.curselection()
+        if not sel:
+            return
+        idx = filtered[sel[0]]
+        entry = history[idx]
+        new_text = simpledialog.askstring(
+            "Edit Translation", "English:", initialvalue=entry["en"], parent=win
+        )
+        if new_text is None:
+            return
+        entry["en"] = new_text
+        entry["edited"] = "1"
+        refresh_list()
+        try:
+            with open("bubble_logs/bubbles.csv", "w", encoding="utf-8", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(["image", "japanese", "english", "engine", "confidence", "edited"])
+                for e in history:
+                    writer.writerow([
+                        e.get("img", ""),
+                        e["jp"],
+                        e["en"],
+                        e.get("engine", ""),
+                        e.get("conf", ""),
+                        e.get("edited", "0"),
+                    ])
+        except Exception as exc:
+            logger.error("Failed to update history CSV: %s", exc)
 
     btn_frame = tk.Frame(win)
     btn_frame.pack(fill="x")
     tk.Button(btn_frame, text="Open Image", command=open_image).pack(side="left")
+    tk.Button(btn_frame, text="Edit", command=edit_translation).pack(side="left")
     tk.Button(btn_frame, text="Export JSON", command=export_json).pack(side="left")
     tk.Button(btn_frame, text="Export CSV", command=export_csv).pack(side="left")
+    tk.Button(btn_frame, text="Export SRT", command=export_srt).pack(side="left")
+
+    show_status_overlay(root, REGION, "History opened", auto_destroy_ms=1000)
 
     show_status_overlay(root, REGION, "History opened", auto_destroy_ms=1000)
 
@@ -163,10 +286,13 @@ def main():
     tooltip_overlay = bool(cfg.get("tooltip_overlay", True))
     align_smoothing = float(cfg.get("align_smoothing", 0.5))
     bubble_shape = cfg.get("bubble_shape", "ellipse")
+    use_bubble_mask = bool(cfg.get("use_bubble_mask", False))
     font_path = cfg.get("overlay_font", "fonts/animeace2_reg.ttf")
     text_color = cfg.get("overlay_text_color", "#ffffff")
     outline_color = cfg.get("overlay_outline_color", "#000000")
     bg_alpha = int(cfg.get("overlay_bg_alpha", 180))
+    highlight_color = cfg.get("highlight_color", "#ffff00")
+    highlight_width = int(cfg.get("highlight_width", 2))
 
     set_engine(cfg.get("translator", "google"))
     fps = int(cfg.get("video_fps", 2))
@@ -180,6 +306,15 @@ def main():
     video_running = False
     loop_id = None
     last_coords = {}
+
+    current_blocks: list = []
+    current_translations: list = []
+    selected_idx = -1
+    highlight_rect = None
+
+    subtitle_visible = bool(cfg.get("subtitle_mode", False))
+    subtitle_win = None
+    subtitle_label = None
 
     def select_capture_region():
         """Let the user drag a rectangle to set the capture region."""
@@ -225,19 +360,101 @@ def main():
         canvas_sel.bind("<ButtonRelease-1>", on_release)
 
     def toggle_bubbles():
-        """Show or hide translated bubbles and notify the user."""
+        """Show or hide translated bubbles with a fade animation."""
         nonlocal bubbles_visible
         bubbles_visible = not bubbles_visible
-        # remove drawn items
+        state = "normal" if bubbles_visible else "hidden"
         for item in bubble_items:
-            canvas.delete(item)
-        bubble_items.clear()
+            canvas.itemconfigure(item, state=state)
+        if highlight_rect:
+            canvas.itemconfigure(highlight_rect, state=state)
+        if bubbles_visible:
+            fade_in(canvas.master, 200)
+        else:
+            fade_out(canvas.master, 200, destroy=False)
         logger.info("Bubbles %s", "shown" if bubbles_visible else "hidden")
         msg = "Bubbles shown" if bubbles_visible else "Bubbles hidden"
         show_status_overlay(root, REGION, msg, auto_destroy_ms=1000)
 
+    def highlight_current() -> None:
+        """Highlight the currently selected bubble."""
+        nonlocal highlight_rect
+        if highlight_rect:
+            canvas.delete(highlight_rect)
+            highlight_rect = None
+        if selected_idx < 0 or selected_idx >= len(current_blocks):
+            return
+        _, (x1, y1, x2, y2), *_ = current_blocks[selected_idx]
+        highlight_rect = canvas.create_rectangle(
+            x1 - REGION["left"],
+            y1 - REGION["top"],
+            x2 - REGION["left"],
+            y2 - REGION["top"],
+            outline=highlight_color,
+            width=highlight_width,
+        )
+
+    def update_subtitles(lines: list[str]) -> None:
+        """Display translations in a subtitle window."""
+        nonlocal subtitle_win, subtitle_label
+        if not subtitle_visible:
+            return
+        if subtitle_win is None:
+            subtitle_win = tk.Toplevel(root)
+            subtitle_win.overrideredirect(True)
+            subtitle_win.attributes("-topmost", True)
+            w = REGION["width"]
+            x = REGION["left"]
+            y = REGION["top"] + REGION["height"] + 5
+            subtitle_win.geometry(f"{w}x80+{x}+{y}")
+            try:
+                subtitle_win.attributes("-transparentcolor", "white")
+                bg = "white"
+                fg = "black"
+            except tk.TclError:
+                bg = "black"
+                fg = "white"
+            subtitle_label = tk.Label(subtitle_win, bg=bg, fg=fg, justify="left", wraplength=w, font=("Arial", 14))
+            subtitle_label.pack(fill="both", expand=True)
+        subtitle_label.config(text="\n".join(lines))
+
+    def toggle_subtitles() -> None:
+        """Toggle subtitle display."""
+        nonlocal subtitle_visible
+        subtitle_visible = not subtitle_visible
+        if not subtitle_visible and subtitle_win is not None:
+            subtitle_win.destroy()
+            show_status_overlay(root, REGION, "Subtitles off", auto_destroy_ms=1000)
+        elif subtitle_visible:
+            update_subtitles(current_translations)
+            show_status_overlay(root, REGION, "Subtitles on", auto_destroy_ms=1000)
+
+    def cycle_next() -> None:
+        """Select the next detected bubble."""
+        nonlocal selected_idx
+        if not current_blocks:
+            return
+        selected_idx = (selected_idx + 1) % len(current_blocks)
+        highlight_current()
+
+    def cycle_prev() -> None:
+        """Select the previous detected bubble."""
+        nonlocal selected_idx
+        if not current_blocks:
+            return
+        selected_idx = (selected_idx - 1) % len(current_blocks)
+        highlight_current()
+
+    def copy_current() -> None:
+        """Copy the current bubble's translation to the clipboard."""
+        if selected_idx < 0 or selected_idx >= len(current_translations):
+            return
+        root.clipboard_clear()
+        root.clipboard_append(current_translations[selected_idx])
+        show_status_overlay(root, REGION, "Copied!", auto_destroy_ms=1000)
+
     def run_ocr_cycle():
-        nonlocal last_coords
+        nonlocal last_coords, current_blocks, current_translations, selected_idx, highlight_rect
         logger.info("Starting OCR cycle")
 
         destroy_status_overlay()
@@ -274,6 +491,16 @@ def main():
         # debugging. Remove these outlines to keep the overlay clean.
 
         # draw translated bubbles if visible
+        current_blocks = blocks
+        current_translations = translations
+        selected_idx = -1
+        if highlight_rect:
+            canvas.delete(highlight_rect)
+            highlight_rect = None
+
+        if subtitle_visible:
+            update_subtitles(translations)
+
         if bubbles_visible and blocks and translations:
             coords = {}
             new_items = draw_translated_bubbles(
@@ -289,6 +516,7 @@ def main():
                 smoothing=align_smoothing,
                 coord_out=coords,
                 bubble_shape=bubble_shape,
+                use_bubble_mask=use_bubble_mask,
                 font_path=font_path,
                 text_color=text_color,
                 outline_color=outline_color,
@@ -296,6 +524,7 @@ def main():
             )
             bubble_items.extend(new_items)
             last_coords = coords
+        fade_in(canvas.master, 200)
 
         logger.info("Overlay updated")
         logger.info("Stage timings: %s", timings)
@@ -325,6 +554,10 @@ def main():
     keyboard.add_hotkey(hotkeys.get('video', 'f7'), toggle_video_mode)
     keyboard.add_hotkey(hotkeys.get('history', 'f6'), lambda: show_history_popup(root))
     keyboard.add_hotkey(hotkeys.get('select_region', 'f10'), select_capture_region)
+    keyboard.add_hotkey(hotkeys.get('next_bubble', 'ctrl+right'), cycle_next)
+    keyboard.add_hotkey(hotkeys.get('prev_bubble', 'ctrl+left'), cycle_prev)
+    keyboard.add_hotkey(hotkeys.get('copy_translation', 'ctrl+c'), copy_current)
+    keyboard.add_hotkey(hotkeys.get('toggle_subtitles', 'ctrl+s'), toggle_subtitles)
     keyboard.add_hotkey(hotkeys.get('quit', 'esc'), root.destroy)
 
     logger.info(

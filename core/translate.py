@@ -135,15 +135,15 @@ def _store_cache(text: str, translation: str) -> None:
         logging.error("Cache store failed: %s", e)
 
 
-def _log_history(source: str, translated: str) -> None:
-    """Append a translation pair to ``historico_traducoes.csv``."""
+def _log_history(source: str, translated: str, engine: str) -> None:
+    """Append a translation pair with engine info to ``historico_traducoes.csv``."""
     try:
         write_header = not HISTORY_CSV.exists()
         with open(HISTORY_CSV, "a", encoding="utf-8", newline="") as f:
             writer = csv.writer(f)
             if write_header:
-                writer.writerow(["Japanese", "English"])
-            writer.writerow([source, translated])
+                writer.writerow(["Japanese", "English", "Engine"])
+            writer.writerow([source, translated, engine])
     except Exception as e:
         logging.error("History log failed: %s", e)
 
@@ -180,7 +180,7 @@ def translate_batch(texts: List[str]) -> List[str]:
         cached = _lookup_cache(t)
         if cached is not None:
             results[i] = cached
-            _log_history(t, cached)
+            _log_history(t, cached, TRANSLATOR)
         else:
             to_translate.append(t)
             indices.append(i)
@@ -201,15 +201,18 @@ def translate_batch(texts: List[str]) -> List[str]:
         else:
             engines = [TRANSLATOR] + [e for e in ["google", "deepl", "marian", "libre"] if e != TRANSLATOR]
             translated = ["" for _ in to_translate]
+            used_engine = TRANSLATOR
             for eng in engines:
                 translated = _translate_engine(eng, to_translate)
                 if any(translated):
                     logging.info("Translated with %s", eng)
+                    used_engine = eng
                     break
 
         for idx, src, trans in zip(indices, to_translate, translated):
             results[idx] = trans
             _store_cache(src, trans)
-            _log_history(src, trans)
+            log_engine = used_engine if 'used_engine' in locals() else TRANSLATOR
+            _log_history(src, trans, log_engine)
 
     return results

@@ -1,45 +1,47 @@
-# Contribution Guidelines
+# Manga Translation Overlay (Japanese → English)
 
-Welcome! This document describes how to contribute to this project and the standards to follow.
+This file guides OpenAI Codex to assist with refactoring, feature improvements, and testing in this project.
 
-## Code Style
-- Follow [PEP8](https://peps.python.org/pep-0008/) for Python, using **four spaces** for indentation.
-- Keep lines under **120 characters** for readability.
-- Every **public function and module** must have a clear, concise docstring that explains what it does.
+## Project Structure
+- `capture.py` – screen capture logic
+- `ocr.py` – runs Manga‑OCR on bubble regions
+- `translate.py` – translates Japanese text (via API or local model)
+- `ui_overlay.py` – draws translated subtitles or bubble overlays
+- `main.py` – CLI / application orchestration
+- `history/` – logs, search, CSV/SRT export utilities
 
-## Commit Messages
-- Use **short, imperative statements** for commit messages (e.g., "Add feature", "Fix bug", "Refactor module").
-- Write in the present tense, as if you’re giving a command.
+## Coding Style & Conventions
+- Use **Python 3.10+**, with type annotations (PEP‑484)
+- Format code with `black` and check with `flake8`
+- Docstrings should follow Google style
+- Meaningful names: e.g. `detect_bubbles()`, `render_subtitle()`, `ocr_confidence`
+- Avoid code duplication; reuse helpers (e.g. cropping, caching)
 
-## Testing Before Commit
-- Always run a syntax check before committing:
-  ```bash
-  python -m py_compile $(git ls-files '*.py')
-If you add a new dependency, update requirements.txt immediately.
+## Testing & Quality Checks
+- Tests live in `tests/` directory; file names end in `_test.py`
+- Use `pytest`; Codex should run `pytest --maxfail=1 --disable-warnings -q`
+- Use a caching test dataset with sample bubble screenshots & expected OCR output
+- Simulate translation buttons / overlay rendering via headless tests in pytest
 
-Pre-commit Linting
-Before each commit, run lint checks:
+## Tasks & PR Guidelines
+- Each PR should target one core area (bubble detection, overlay, performance)
+- PR title format: **[Area] Concise description** (e.g. `[OCR] Add confidence threshold fallback`)
+- Summary must include:
+  - What was changed
+  - How you validated it (tests, manual verification)
+  - Performance or UX improvements
+- If touching UI, include a screenshot or log sample
 
-bash
-Copiar
-Editar
-pre-commit run --files $(git diff --name-only)
-Make sure requirements.txt is up-to-date with any new dependencies.
+## Development Flow for Codex
+- Always run full test suite and `black`, `flake8` before completing a task
+- For UI / overlay changes, Codex should open a demo overlay image for review
+- For performance optimizations, include before/after timing metrics in comments
 
-Pull Requests (PRs)
-Each PR description must include:
+## Translation Task Notes
+- Use caching—if `translate_cached(text)` exists, Codex should call it to avoid duplicate API calls
+- Avoid real network calls in tests; mock translation engine with stub outputs
 
-## Summary: What this change does.
-
-## Testing: How you tested it and what the results were.
-
-PRs should be focused and address a single logical change whenever possible.
-
-General Guidance
-Write self-documenting code and clear comments when logic is non-obvious.
-
-Avoid unnecessary code duplication.
-
-Prefer clarity and maintainability over cleverness.
-
-Thanks for contributing!
+## Feature Guidance
+- Bubble detection should support overlapping, irregular shapes; consider YOLOv8 or real‑time segmentation
+- OCR must read vertical Japanese; prefer Manga‑OCR
+- Overlay renderer should support in-bubble and subtitle modes; respect style guidelines

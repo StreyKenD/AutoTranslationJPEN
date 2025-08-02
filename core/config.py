@@ -24,6 +24,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "select_region": "alt+shift+r",
     },
     "bubble_padding": 8,
+    "bubble_min_width": 25,
+    "bubble_min_height": 25,
     "replace_mode": False,
     "save_bubble_images": False,
     "overflow_to_nearby": False,

@@ -123,6 +123,8 @@ class TranslatorApp:
         self.conf_threshold = float(cfg.get("ocr_confidence_threshold", 0.5))
         self.highlight_color = cfg.get("highlight_color", "#ffff00")
         self.highlight_width = int(cfg.get("highlight_width", 2))
+        self.min_bubble_width = int(cfg.get("bubble_min_width", 25))
+        self.min_bubble_height = int(cfg.get("bubble_min_height", 25))
 
         self.root = build_root_window()
         self.canvas = build_overlay_canvas(self.root, self.region)
@@ -270,6 +272,8 @@ class TranslatorApp:
             timings,
             save_bubble_images=self.save_bubble_images,
             conf_threshold=self.conf_threshold,
+            min_width=self.min_bubble_width,
+            min_height=self.min_bubble_height,
         )
 
         self.current_blocks = blocks

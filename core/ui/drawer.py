@@ -1,34 +1,110 @@
 """Overlay drawing helpers."""
-import textwrap
+
 import logging
+import textwrap
 import tkinter as tk
+
 from PIL import (
     Image,
+    ImageColor,
     ImageDraw,
+    ImageFilter,
     ImageFont,
     ImageTk,
-    ImageFilter,
-    ImageColor,
 )
 
 # Settings (can be moved to config.py later)
-FONT_PATH     = "fonts/animeace2_reg.ttf"
-MIN_FONT_SIZE = 12            # minimum font size
-BLUR_RADIUS   = 5             # radius for background blur
-LINE_SPACING  = 4             # spacing between lines
-BG_ALPHA      = 128           # alpha for white overlay (0-255)
-CORNER_RADIUS = 10            # corner radius for overlay box
-TEXT_COLOR    = (255, 255, 255, 255)
+FONT_PATH = "fonts/animeace2_reg.ttf"
+MIN_FONT_SIZE = 12  # minimum font size
+BLUR_RADIUS = 5  # radius for background blur
+LINE_SPACING = 4  # spacing between lines
+BG_ALPHA = 128  # alpha for white overlay (0-255)
+CORNER_RADIUS = 10  # corner radius for overlay box
+TEXT_COLOR = (255, 255, 255, 255)
 OUTLINE_COLOR = (0, 0, 0, 255)
 
 logger = logging.getLogger(__name__)
 
+
+def _normalize_color(
+    color: str | tuple[int, int, int, int],
+) -> tuple[int, int, int, int]:
+    """Return an RGBA tuple for ``color``.
+
+    Args:
+        color: Color specified as a string or RGB/RGBA tuple.
+
+    Returns:
+        The color as an ``(r, g, b, a)`` tuple.
+    """
+    if isinstance(color, str):
+        r, g, b = ImageColor.getrgb(color)
+        return r, g, b, 255
+    if len(color) == 3:
+        return (*color, 255)
+    return color
+
+
+def _calculate_font_layout(
+    text: str, w: int, h: int, font_path: str
+) -> tuple[ImageFont.ImageFont, list[str], int, int, bool]:
+    """Calculate font, wrapped lines and layout metrics for ``text``.
+
+    Args:
+        text: Text to render inside a ``w`` by ``h`` rectangle.
+        w: Width of the rectangle.
+        h: Height of the rectangle.
+        font_path: Path to the TTF font.
+
+    Returns:
+        A tuple of ``(font, lines, line_height, total_height, overflow)``.
+    """
+    font_size = min(
+        max(MIN_FONT_SIZE, int(h * 0.25)),
+        max(MIN_FONT_SIZE, int(w * 0.12)),
+    )
+    dummy_draw = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
+    while True:
+        try:
+            font = ImageFont.truetype(font_path, font_size)
+        except IOError:
+            logger.warning("Failed to load font at %s, using default.", font_path)
+            font = ImageFont.load_default()
+
+        max_chars = max(10, w // (font_size * 2 // 3))
+        wrapped = textwrap.fill(text, width=max_chars)
+        lines = wrapped.split("\n")
+
+        try:
+            line_height = font.getbbox("A")[3] + LINE_SPACING
+        except Exception:
+            line_height = 16 + LINE_SPACING
+
+        total_height = len(lines) * line_height
+        width_overflow = False
+        for ln in lines:
+            try:
+                line_width = font.getbbox(ln)[2]
+            except AttributeError:
+                line_width = dummy_draw.textlength(ln, font=font)
+            if line_width > w - 10:
+                width_overflow = True
+                break
+
+        if (
+            total_height <= h - 10 and not width_overflow
+        ) or font_size <= MIN_FONT_SIZE:
+            overflow = total_height > h - 10 or width_overflow
+            return font, lines, line_height, total_height, overflow
+        font_size -= 1
+
+
 def draw_translated_bubbles(
-    canvas,
-    region_img,
+    canvas: tk.Canvas,
+    region_img: Image.Image,
     blocks,
-    translations,
-    region,
+    translations: list[str],
+    region: dict[str, int],
     replace_mode: bool = False,
     overflow_to_nearby: bool = False,
     show_tooltip: bool = True,
@@ -41,7 +117,7 @@ def draw_translated_bubbles(
     text_color: str | tuple = TEXT_COLOR,
     outline_color: str | tuple = OUTLINE_COLOR,
     bg_alpha: int = BG_ALPHA,
-):
+) -> list[int]:
     """Draw translated bubbles on the canvas with optional UX helpers.
 
     Parameters
@@ -114,14 +190,12 @@ def draw_translated_bubbles(
             tooltip_win = None
 
     hide_tip()
-    if isinstance(text_color, str):
-        tc = ImageColor.getrgb(text_color)
-        text_color = (*tc, 255)
-    if isinstance(outline_color, str):
-        oc = ImageColor.getrgb(outline_color)
-        outline_color = (*oc, 255)
+    text_color = _normalize_color(text_color)
+    outline_color = _normalize_color(outline_color)
 
-    for (orig, (x1, y1, x2, y2), conf, angle, contour), translated in zip(blocks, translations):
+    for (orig, (x1, y1, x2, y2), conf, angle, contour), translated in zip(
+        blocks, translations
+    ):
         try:
             w, h = x2 - x1, y2 - y1
 
@@ -157,52 +231,22 @@ def draw_translated_bubbles(
                 mask_draw.ellipse([(0, 0), (w, h)], fill=255)
                 shadow_draw.ellipse([(0, 0), (w, h)], fill=(0, 0, 0, 120))
             else:
-                mask_draw.rounded_rectangle([(0, 0), (w, h)], radius=CORNER_RADIUS, fill=255)
-                shadow_draw.rounded_rectangle([(0, 0), (w, h)], radius=CORNER_RADIUS, fill=(0, 0, 0, 120))
+                mask_draw.rounded_rectangle(
+                    [(0, 0), (w, h)], radius=CORNER_RADIUS, fill=255
+                )
+                shadow_draw.rounded_rectangle(
+                    [(0, 0), (w, h)], radius=CORNER_RADIUS, fill=(0, 0, 0, 120)
+                )
             shadow_blurred = shadow.filter(ImageFilter.GaussianBlur(6))
             img.paste(shadow_blurred, (0, 0), shadow_blurred)
 
             img.paste(bg, (0, 0), mask)
             draw = ImageDraw.Draw(img, "RGBA")
 
-            # 3. Determine dynamic font size
-            font_size = min(
-                max(MIN_FONT_SIZE, int(h * 0.25)),
-                max(MIN_FONT_SIZE, int(w * 0.12))  # this caps font size if bubble is narrow
+            # 3. Determine dynamic font size and wrapping
+            font, lines, line_height, total_text_height, overflow = (
+                _calculate_font_layout(translated, w, h, font_path)
             )
-
-            overflow = False
-            while True:
-                try:
-                    font = ImageFont.truetype(font_path, font_size)
-                except IOError:
-                    logger.warning("Failed to load font at %s, using default.", font_path)
-                    font = ImageFont.load_default()
-
-                max_chars = max(10, w // (font_size * 2 // 3))
-                wrapped = textwrap.fill(translated, width=max_chars)
-                lines = wrapped.split("\n")
-
-                try:
-                    line_height = font.getbbox("A")[3] + LINE_SPACING
-                except Exception:
-                    line_height = 16 + LINE_SPACING
-
-                total_text_height = len(lines) * line_height
-                width_overflow = False
-                for ln in lines:
-                    try:
-                        tw = font.getbbox(ln)[2]
-                    except AttributeError:
-                        tw = draw.textlength(ln, font=font)
-                    if tw > w - 10:
-                        width_overflow = True
-                        break
-
-                if (total_text_height <= h - 10 and not width_overflow) or font_size <= MIN_FONT_SIZE:
-                    overflow = total_text_height > h - 10 or width_overflow
-                    break
-                font_size -= 1
 
             if overflow and overflow_to_nearby:
                 x_draw = x2 + 10

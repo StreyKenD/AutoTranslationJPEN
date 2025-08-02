@@ -1,13 +1,21 @@
-# manga_ocr_module.py
-from manga_ocr import MangaOcr
-from PIL import Image
-import numpy as np
-import cv2
+"""Utilities for running Manga-OCR and post-processing results."""
+
+from __future__ import annotations
+
+import logging
 import re
+from typing import List, Tuple
 
-# Initialize OCR once (loads ~400 MB model at startup) :contentReference[oaicite:1]{index=1}
+import cv2
+import numpy as np
+from PIL import Image
+from manga_ocr import MangaOcr
+
+
+logger = logging.getLogger(__name__)
+
+# Initialize OCR once (loads ~400 MB model at startup)
 _mocr = MangaOcr()
-
 
 JAPANESE_RE = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9faf]")
 
@@ -33,11 +41,23 @@ def detect_text_orientation(img: Image.Image) -> str:
         return "vertical"
     return "mixed"
 
-def extract_text(img):
-    """Return recognized text, box, confidence and angle for ``img``."""
+
+def extract_text(
+    img: Image.Image | np.ndarray,
+) -> List[Tuple[str, Tuple[int, int, int, int], float, int]]:
+    """Return recognized text blocks for ``img``.
+
+    Args:
+        img: Image array or ``PIL.Image`` to process.
+
+    Returns:
+        list[tuple[str, tuple[int, int, int, int], float, int]]: Recognized
+            text, bounding box, confidence score and rotation angle.
+    """
+
     if isinstance(img, np.ndarray):
         img = Image.fromarray(img)
-    elif not isinstance(img, Image.Image):
+    elif not isinstance(img, Image.Image):  # pragma: no cover - defensive branch
         raise ValueError(f"img must be a path or PIL.Image, got {type(img)}")
 
     try:
@@ -52,6 +72,6 @@ def extract_text(img):
         result = _mocr(proc_img)
         conf = estimate_confidence(result)
         return [(result, (0, 0, img.width, img.height), conf, angle)]
-    except Exception as e:
-        print("OCR Error:", e)
+    except Exception as e:  # pragma: no cover - OCR failures are rare
+        logger.error("OCR Error: %s", e)
         return []

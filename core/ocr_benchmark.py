@@ -1,9 +1,12 @@
 """Simple Manga-OCR benchmarking utilities."""
 
+from __future__ import annotations
+
 import argparse
 import logging
 import time
 from pathlib import Path
+from typing import Any, Dict, List
 
 import cv2
 import torch
@@ -11,14 +14,29 @@ import torch
 from .manga_ocr import extract_text
 
 
-def benchmark_directory(dir_path: str):
-    """Benchmark OCR speed for all images in ``dir_path``."""
-    paths = [p for p in Path(dir_path).iterdir() if p.suffix.lower() in {'.png', '.jpg', '.jpeg'}]
-    results = []
+logger = logging.getLogger(__name__)
+
+
+def benchmark_directory(dir_path: str) -> List[Dict[str, Any]]:
+    """Benchmark OCR speed for all images in ``dir_path``.
+
+    Args:
+        dir_path: Directory containing image files.
+
+    Returns:
+        list[dict[str, Any]]: Timing and text results for each image.
+    """
+
+    paths = [
+        p
+        for p in Path(dir_path).iterdir()
+        if p.suffix.lower() in {".png", ".jpg", ".jpeg"}
+    ]
+    results: List[Dict[str, Any]] = []
     for path in paths:
         img = cv2.imread(str(path))
         if img is None:
-            logging.warning("Could not read %s", path)
+            logger.warning("Could not read %s", path)
             continue
         start = time.perf_counter()
         blocks = extract_text(img)
@@ -34,13 +52,18 @@ def main() -> None:
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
-    logging.info("GPU acceleration: %s", torch.cuda.is_available())
+    logger.info("GPU acceleration: %s", torch.cuda.is_available())
     data = benchmark_directory(args.input_dir)
     total = sum(r["time"] for r in data)
     for r in data:
-        logging.info("%s: %.3fs -> %s", r["image"], r["time"], r["text"])
+        logger.info("%s: %.3fs -> %s", r["image"], r["time"], r["text"])
     if data:
-        logging.info("Processed %d images in %.2fs (avg %.3fs)", len(data), total, total / len(data))
+        logger.info(
+            "Processed %d images in %.2fs (avg %.3fs)",
+            len(data),
+            total,
+            total / len(data),
+        )
 
 
 if __name__ == "__main__":

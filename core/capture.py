@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 os.makedirs("debug", exist_ok=True)
 DEBUG_IMAGES = os.environ.get("DEBUG_IMAGES") == "1"
 
-
 def get_screen_region(monitor: int = 1) -> dict[str, int]:
     """Return the bounding box for the specified monitor.
 
@@ -22,7 +21,6 @@ def get_screen_region(monitor: int = 1) -> dict[str, int]:
         monitor: Monitor index as understood by :mod:`mss`. ``1`` selects the
             primary monitor while ``0`` captures the virtual screen spanning
             all monitors. Defaults to ``1``.
-
     Returns:
         dict[str, int]: Mapping with ``left``, ``top``, ``width`` and
         ``height`` keys describing the monitor's region.
@@ -61,10 +59,8 @@ def grab_region(region: dict[str, int], target_width: int | None = None) -> np.n
         cv2.imwrite("debug/00_captured.png", img)
     return img
 
-
 def grab_screen(target_width: int | None = None, monitor: int = 1) -> np.ndarray:
     """Capture a monitor's entire screen.
-
     Args:
         target_width: If provided and the captured frame is narrower, scale the
             image to this width while preserving aspect ratio.

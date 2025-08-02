@@ -11,7 +11,7 @@ from __future__ import annotations
 import csv
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 import keyboard
 import tkinter as tk
@@ -151,16 +151,20 @@ class TranslatorApp:
         """Bind keyboard shortcuts from the configuration file."""
 
         hk = self.hotkeys
-        keyboard.add_hotkey(hk.get("ocr", "f8"), self.run_ocr_cycle)
-        keyboard.add_hotkey(hk.get("toggle_bubbles", "f9"), self.toggle_bubbles)
-        keyboard.add_hotkey(hk.get("video", "f7"), self.toggle_video_mode)
-        keyboard.add_hotkey(hk.get("history", "f6"), self.show_history_popup)
-        keyboard.add_hotkey(hk.get("select_region", "f10"), self.select_capture_region)
-        keyboard.add_hotkey(hk.get("next_bubble", "ctrl+right"), self.cycle_next)
-        keyboard.add_hotkey(hk.get("prev_bubble", "ctrl+left"), self.cycle_prev)
-        keyboard.add_hotkey(hk.get("copy_translation", "ctrl+c"), self.copy_current)
-        keyboard.add_hotkey(hk.get("toggle_subtitles", "ctrl+s"), self.toggle_subtitles)
-        keyboard.add_hotkey(hk.get("quit", "esc"), self.root.destroy)
+
+        def add(name: str, callback: Callable[[], None]) -> None:
+            keyboard.add_hotkey(hk.get(name), callback, suppress=True)
+
+        add("ocr", self.run_ocr_cycle)
+        add("toggle_bubbles", self.toggle_bubbles)
+        add("video", self.toggle_video_mode)
+        add("history", self.show_history_popup)
+        add("select_region", self.select_capture_region)
+        add("next_bubble", self.cycle_next)
+        add("prev_bubble", self.cycle_prev)
+        add("copy_translation", self.copy_current)
+        add("toggle_subtitles", self.toggle_subtitles)
+        add("quit", self.root.destroy)
 
     # ------------------------------------------------------------------
     # Region selection
@@ -331,14 +335,20 @@ class TranslatorApp:
     def toggle_bubbles(self) -> None:
         """Show or hide translated bubbles with a fade animation."""
 
+        if not getattr(self, "canvas", None) or not self.canvas.winfo_exists():
+            return
+
         self.bubbles_visible = not self.bubbles_visible
         state = "normal" if self.bubbles_visible else "hidden"
         for item in self.bubble_items:
-            self.canvas.itemconfigure(item, state=state)
+            try:
+                self.canvas.itemconfigure(item, state=state)
+            except tk.TclError:
+                pass
         if self.bubbles_visible:
             fade_in(self.canvas.master, 200)
         else:
-            fade_out(self.canvas.master, 200)
+            fade_out(self.canvas.master, 200, destroy=False)
 
     def cycle_next(self) -> None:
         """Highlight the next bubble."""

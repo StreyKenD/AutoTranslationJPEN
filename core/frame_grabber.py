@@ -23,12 +23,12 @@ class FrameGrabber:
     Args:
         region: Dictionary describing the region to capture. Must contain
             ``top``, ``left``, ``width`` and ``height`` keys. If ``None``, the
-            entire virtual screen is used.
+            primary monitor is used.
         fps: Target capture rate in frames per second.
     """
 
     def __init__(self, region: dict[str, int] | None = None, fps: int = 30) -> None:
-        self.region = region or get_screen_region()
+        self.region = region or get_screen_region(1)
         self.fps = fps
         self._frame: Optional[np.ndarray] = None
         self._running = False

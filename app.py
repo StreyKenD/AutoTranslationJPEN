@@ -106,7 +106,7 @@ class TranslatorApp:
 
         set_engine(cfg.get("translator", "google"))
 
-        self.region = get_screen_region()
+        self.region = get_screen_region(1)
         self.fps = int(cfg.get("video_fps", 2))
         self.bubble_padding = int(cfg.get("bubble_padding", 0))
         self.replace_mode = bool(cfg.get("replace_mode", False))
@@ -244,7 +244,7 @@ class TranslatorApp:
                 )
                 return
         else:
-            raw = grab_screen()
+            raw = grab_screen(monitor=1)
 
         try:
             import cv2

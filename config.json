@@ -16,6 +16,8 @@
   "ocr_confidence_threshold": 0.5,
   "subtitle_mode": false,
   "highlight_color": "#ffff00",
-  "highlight_width": 2
+  "highlight_width": 2,
+  "bubble_min_width": 25,
+  "bubble_min_height": 25
 }
 

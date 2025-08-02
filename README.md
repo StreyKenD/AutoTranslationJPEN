@@ -65,7 +65,7 @@ A local tool for translating manga images with automatic bubble detection and ov
     - `capture.py` – capture/load images
     - `ocr.py` – run Manga-OCR
     - `translate.py` – translation APIs/models
-    - `ui_overlay.py` – draw overlays
+    - `ui_overlay.py` – draw overlays and overlay controls
     - `main.py` – CLI & workflow glue
 
 ---

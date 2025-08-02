@@ -13,3 +13,4 @@ opencv-python
 manga-ocr
 pre-commit
 flake8
+PyQt5

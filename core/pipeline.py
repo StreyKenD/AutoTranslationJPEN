@@ -69,6 +69,8 @@ def process_region(
     timings: dict[str, float] | None = None,
     save_bubble_images: bool = False,
     conf_threshold: float = 0.5,
+    min_width: int = 25,
+    min_height: int = 25,
 ) -> Tuple[List[Tuple[str, Tuple[int, int, int, int], float, int, Any]], List[str]]:
     """Run detection, OCR and translation for a region.
 
@@ -79,6 +81,8 @@ def process_region(
         timings: Optional dict to store timing information.
         save_bubble_images: If ``True``, cropped bubbles are stored to disk.
         conf_threshold: Warn when estimated OCR confidence is below this value.
+        min_width: Minimum bubble width in pixels.
+        min_height: Minimum bubble height in pixels.
 
     Returns:
         tuple[list, list[str]]: OCR blocks and corresponding translations.
@@ -94,7 +98,13 @@ def process_region(
     if timings is not None:
         timings["grab_region"] = t1 - t0
 
-    bubble_crops = detect_bubbles(img, padding=bubble_padding, return_contours=True)
+    bubble_crops = detect_bubbles(
+        img,
+        padding=bubble_padding,
+        min_width=min_width,
+        min_height=min_height,
+        return_contours=True,
+    )
     logging.info("Detected %d bubbles", len(bubble_crops))
     if not bubble_crops:
         logging.info("No bubbles detected. Skipping OCR.")

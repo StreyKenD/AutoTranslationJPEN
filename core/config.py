@@ -1,12 +1,16 @@
 """Configuration loader for customizable settings."""
 
+from __future__ import annotations
+
 import json
-from pathlib import Path
 import logging
+from pathlib import Path
+from typing import Any, Dict
+
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_CONFIG = {
+DEFAULT_CONFIG: Dict[str, Any] = {
     "hotkeys": {
         "ocr": "f8",
         "toggle_bubbles": "f9",
@@ -16,7 +20,7 @@ DEFAULT_CONFIG = {
         "copy_translation": "ctrl+c",
         "toggle_subtitles": "ctrl+s",
         "quit": "esc",
-        "history": "f6"
+        "history": "f6",
     },
     "bubble_padding": 8,
     "replace_mode": False,
@@ -41,15 +45,20 @@ DEFAULT_CONFIG = {
 CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.json"
 
 
-def load_config():
-    """Load configuration from ``config.json`` if present."""
+def load_config() -> Dict[str, Any]:
+    """Load configuration from ``config.json`` if present.
+
+    Returns:
+        dict[str, Any]: Merged configuration dictionary.
+    """
+
     if CONFIG_PATH.exists():
         try:
             with open(CONFIG_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
         except json.JSONDecodeError as e:
             logger.error("Failed to parse %s: %s", CONFIG_PATH, e)
-        except Exception as e:
+        except Exception as e:  # pragma: no cover - unexpected IO errors
             logger.error("Failed to load config: %s", e)
         else:
             DEFAULT_CONFIG.update(data)
